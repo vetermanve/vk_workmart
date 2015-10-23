@@ -1,0 +1,1 @@
+<h1>I'm an index php</h1>
