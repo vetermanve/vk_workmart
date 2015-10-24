@@ -1,17 +1,45 @@
 <?php
 
+$_loadCache = [];
+
 // require-style autoloader
 function lets_use ($moduleName, $anotherModule = null) {
     static $loadedModules;
+    global $_loadCache;
     $modules = $anotherModule ? func_get_args() : [$moduleName];
     
     foreach ($modules as $module) {
         if (!isset($loadedModules[$module])) {
-            $requiredFile =  'app/'.str_replace('_', '/', $module).'.php';
+            
+            if(strpos($module, '_')) {
+                $requiredFile =  'app/'.str_replace('_', '/', $module).'.php';    
+            } else{
+                $requiredFile =  'app/'.$module.'/_root.php';
+            }
+            
+            if (!file_exists($requiredFile)) {
+                _lets_report_load_error('File not found', $module, $requiredFile);
+            }
             
             $startLoadTime = microtime(1);
             require_once ($requiredFile);
+            
+            if (!isset ($_loadCache[$module])) {
+                _lets_report_load_error('Required file not provide @lets_sure_loaded', $module, $requiredFile);    
+            }
+            
             $loadedModules[$module] = microtime(1) - $startLoadTime;
         }
     }
 };
+
+function lets_sure_loaded($moduleName) {
+    global $_loadCache;
+    $_loadCache[$moduleName] = 1;
+}
+
+function _lets_report_load_error($error, $moduleName, $location) {
+    trigger_error('Module "'.$moduleName .'" not loaded. '.$error.' at location '.$location);
+}
+
+

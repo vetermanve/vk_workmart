@@ -2,10 +2,13 @@
 
 chdir('..');
 
+error_reporting(1);
+ini_set("display_errors", 1);
+
 require_once 'autoload.php';
 
-lets_use('core_main', 'core_config', 'web_router', 'web_render');
+lets_use('core', 'core_config', 'web_router', 'web_render'); 
 
-core_main_init(core_config_data());
+core_init('web');
 
-web_render_page('index', 'index', []);
+web_router_route($_SERVER['REQUEST_URI'], $_GET, $_POST);

@@ -1,5 +1,7 @@
 <?php
 
+lets_sure_loaded('core_config');
+
 function core_config_data () {
     return [
         'db' => [
