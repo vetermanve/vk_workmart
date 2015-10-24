@@ -17,15 +17,26 @@ function web_router_route($uri, $get, $post) {
     
     $module = 'web_controller_'.$controllerName;
     lets_use($module);
+    
     $function = $module.'_'.$actionName;
     
     if (!function_exists($function)) {
         return web_router_notfound($uri);
     }
+    try {
+        $function();    
+    } catch (Exception $e) {
+        return web_router_error('');
+    }
     
-    return web_render_page($controller, $action, array_merge($post, $get));
+//    return web_render_page($controller, $action, array_merge($post, $get));
 }
 
 function web_router_notfound ($uri) {
     return web_render_page('error', 'notFound', ['uri' => $uri]);
 }
+
+function web_router_error ($msg) {
+    return web_render_page('error', 'error', ['msg' => $msg]);
+}
+

@@ -42,8 +42,10 @@ h3 {
 .brand-tagline {
     margin: 0;
 }
-.brand-title {
+.brand-title a {
     text-transform: uppercase;
+    color: #ffffff;
+    text-decoration: none;
 }
 .brand-tagline {
     font-weight: 300;
@@ -83,6 +85,7 @@ h3 {
     font-size: 80%;
     font-weight: 500;
     letter-spacing: 0.1em;
+    text-align: right;
 }
 
 .content {

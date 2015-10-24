@@ -4,7 +4,11 @@ lets_sure_loaded('web_render');
 
 lets_use('core');
 
-function web_render_page($module, $template, $data, $layout = 'main') {
+$_web_render_global_params = [];
+
+function web_render_page($module, $template, $data = [], $layout = 'main') {
+    global $_web_render_global_params;
+    
     $templateFile = __DIR__.'/templates/'.$module.'/'.$template.'.phtml';
     $layoutFile = __DIR__.'/templates/layouts/'.$layout.'.phtml';
     
@@ -19,8 +23,21 @@ function web_render_page($module, $template, $data, $layout = 'main') {
     }
     
     ob_start();
-    extract($data);
+    extract((array)$data);
+    extract((array)$_web_render_global_params);
     require $templateFile;
     $content = ob_get_clean();
     require $layoutFile;
+}
+
+function web_render_add_data ($key, $data) {
+    global $_web_render_global_params;
+    
+    $_web_render_global_params[$key] = $data;
+}
+
+function web_render_add_data_array ($paramsArray) {
+    global $_web_render_global_params;
+    
+    $_web_render_global_params = $paramsArray + $_web_render_global_params; 
 }

@@ -18,17 +18,16 @@
 
 </head>
 <body>
-
     <div id="layout" class="pure-g">
         <div class="sidebar pure-u-1 pure-u-md-1-4">
             <div class="header">
-                <h1 class="brand-title">Let's Do IT</h1>
+                <h1 class="brand-title"><a href="/">Let's Do IT</a></h1>
                 <h2 class="brand-tagline">Система управления вашими заказами</h2>
 
                 <nav class="nav">
                     <ul class="nav-list">
                         <li class="nav-item">
-                            <a class="pure-button" href="/auth/login">Войти</a>
+                            <a class="pure-button" href="/auth/auth">Войти</a>
                         </li>
                         <li class="nav-item">
                             <a class="pure-button" href="/auth/register">Присоедениться</a>
@@ -37,7 +36,9 @@
                 </nav>
             </div>
         </div>
-        <?=$content?>
+        <div class="content pure-u-1 pure-u-md-3-4">
+            <?=$content?>
+        </div>
     </div>
 </body>
 </html>
