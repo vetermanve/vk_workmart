@@ -17,7 +17,9 @@ function core_log($sting) {
 
 function core_dump($data, $data2 = null) {
     echo '<pre>';
-    var_dump(func_get_args());
+    foreach (func_get_args() as $val) {
+        var_dump($val);    
+    }
     echo '</pre>';
 }
 
