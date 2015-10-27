@@ -39,6 +39,13 @@ function _core_storage_db_get_connection ($dbPart) {
         )
     );
     
+    if (!$mysqli) {
+        trigger_error('Cannot establish connection to db '.$dbPart.' with given config. Error: '.mysqli_connect_error().
+           '; code: '.mysqli_connect_errno(), E_USER_ERROR);
+        
+        return false;
+    }
+    
     $connections[$dbPart] = $mysqli;
     
     return $connections[$dbPart];
@@ -68,6 +75,52 @@ function core_storage_db_get_row ($table, $cols, $where, $cond) {
     
     return mysqli_fetch_assoc($res);   
 }
+
+function core_storage_db_get_row_one ($table, $cols, $where, $cond) {
+    $result = core_storage_db_get_row($table, $cols, $where, $cond);
+    return $result ? $result[0] : $result;    
+}
+
+function core_storage_db_insert_row ($table, $bind, $ignore = false) {
+    $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
+    
+    if (!$connection) {
+        trigger_error('Lost connection from db', E_USER_WARNING);
+        return false;
+    }
+    
+    list ($colsNames, $values) = _core_storage_db_prepare_insert_row($connection, $bind);
+    
+    $queryString = 'INSERT '.($ignore ? 'IGNORE' : '').' INTO '.$table.' ('.implode(', ', $colsNames).') '.
+        ' VALUES ('.implode(',', $values).')';
+    
+    $res = mysqli_query($connection, $queryString);
+    
+    if ($res === false || $connection->error) {
+        trigger_error($connection->error);
+        return [];
+    }
+    
+    return $res;
+}
+
+function _core_storage_db_prepare_insert_row($connection, $insertBind) {
+    $values = $colsNames = [];
+    
+    foreach ($insertBind as $colName => $value) {
+        $colsNames[] = $colName;
+        
+        if (is_null($value)) {
+            $values[] = 'NULL';
+        } else if (is_numeric($value)) {
+            $values[] = $value;
+        } else {
+            $values[] = '"'.mysqli_real_escape_string($connection, $value).'"';
+        }
+    }
+    
+    return [$colsNames, $values];
+} 
 
 function _core_storage_db_build_where ($connection, $where) {
     if (!is_array($where[0])) {
