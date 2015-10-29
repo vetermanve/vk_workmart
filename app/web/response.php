@@ -2,28 +2,29 @@
 
 lets_sure_loaded('web_response');
 
-const _WEB_RESPONSE_BODY = 'body';
-const _WEB_RESPONSE_CODE = 'code';
+const _WEB_RESPONSE_BODY         = 'body';
+const _WEB_RESPONSE_CODE         = 'code';
 const _WEB_RESPONSE_CONTENT_TYPE = 'content_type';
-const _WEB_RESPONSE_HEADERS = 'headers';
+const _WEB_RESPONSE_HEADERS      = 'headers';
 
+global $_web_response_content_proto;
 global $_web_response_content;
 global $_web_response_lock;
 
-$_web_response_content = [
+$_web_response_content_proto = [
     _WEB_RESPONSE_CODE         => 200,
     _WEB_RESPONSE_CONTENT_TYPE => '',
     _WEB_RESPONSE_HEADERS      => [],
     _WEB_RESPONSE_BODY         => '',
 ];
 
+$_web_response_content = $_web_response_content_proto;
+
 $_web_response_lock = false;
 
 function web_response_flush () {
     global $_web_response_lock;
     global $_web_response_content;
-    
-    core_dump($_web_response_content);
     
     // check response already sent
     if ($_web_response_lock) {
@@ -76,7 +77,6 @@ function web_response_redirect ($uri, $host = null, $code = 302) {
 
 function web_response_set_body ($body) {
     global $_web_response_content;
-    core_dump($_web_response_content);die();
     
     $_web_response_content[_WEB_RESPONSE_BODY] = $body;
 }
@@ -102,21 +102,3 @@ function web_response_add_header($header, $name = null) {
         $_web_response_content[_WEB_RESPONSE_HEADERS][$name] = $header;
     }
 }
-
-function web_response_check()
-{
-    global $_web_response_content;
-    $_web_response_content[] = mt_rand(1,30002);
-    core_dump($_web_response_content); 
-}
-
-web_response_check();
-web_response_check();
-web_response_check();
-
-die();
-
-
-
-
-
