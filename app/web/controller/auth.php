@@ -43,7 +43,7 @@ function web_controller_auth_register () {
         ['email', $email],
     ]);
     
-    if (!$authUser) {
+    if ($authUser) {
         web_router_render_page('auth', 'register', ['msg' => 'Пользователь с таким email уже существует', 'wrong' => 'email',]);
         return ;
     }
@@ -56,7 +56,7 @@ function web_controller_auth_register () {
     
     $pass = web_router_get_param('pass');
     if (!$pass || mb_strlen($pass) < 6) {
-        web_router_render_page('auth', 'register', ['msg' => 'Пароль должен быть зада и не менее 6ти символов', 'wrong' => 'pass',]);
+        web_router_render_page('auth', 'register', ['msg' => 'Пароль должен быть задан и не менее 6ти символов', 'wrong' => 'pass',]);
         return ;
     }
     
@@ -69,6 +69,7 @@ function web_controller_auth_register () {
         'name' => $userName,
         'salt' => $salt,
         'pass' => $passHash,
+        'email' => $email,
     ]);
     
     if(!$res) {

@@ -32,10 +32,10 @@ function core_config_load () {
             'db_tables' => [
                 'db_part1' => [
                     '*',
-                    'users',
+                    'orders',
                 ],
                 'db_part2' => [
-                    'orders',
+                    'users',
                 ],
             ],
         ];    
