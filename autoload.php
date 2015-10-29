@@ -2,6 +2,13 @@
 
 $_loadCache = [];
 
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error) {
+        var_dump($error);
+    }
+});
+
 // require-style autoloader
 function lets_use ($moduleName, $anotherModule = null) {
     static $loadedModules;

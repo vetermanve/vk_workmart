@@ -51,7 +51,7 @@ function _core_storage_db_get_connection ($dbPart) {
     return $connections[$dbPart];
 }
 
-function core_storage_db_get_row ($table, $cols, $where, $cond) {
+function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
     $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
     $cols = (array)$cols;
     
@@ -66,6 +66,14 @@ function core_storage_db_get_row ($table, $cols, $where, $cond) {
         ' FROM '.$table.' '.
         ($whereString ? 'WHERE '. $whereString : '');
     
+    if (isset($cond['ORDER BY'])) {
+        $queryString .= 'ORDER BY '.$cond['ORDER BY'];
+    }
+    
+    if (isset($cond['LIMIT'])) {
+        $queryString .= 'LIMIT '.(int)$cond['LIMIT'];     
+    }
+    
     $res = mysqli_query($connection, $queryString);
     
     if ($res === false || $connection->error) {
@@ -76,8 +84,11 @@ function core_storage_db_get_row ($table, $cols, $where, $cond) {
     return mysqli_fetch_assoc($res);   
 }
 
-function core_storage_db_get_row_one ($table, $cols, $where, $cond) {
-    $result = core_storage_db_get_row($table, $cols, $where, $cond);
+function core_storage_db_get_row_one ($table, $cols, $where, $cond = []) {
+    $result = core_storage_db_get_row($table, $cols, $where, [
+        'LIMIT' => 1,
+    ]);
+    
     return $result ? $result[0] : $result;    
 }
 

@@ -6,7 +6,7 @@ lets_use('core');
 
 $_web_render_global_params = [];
 
-function web_render_page($module, $template, $data = [], $layout = 'main') {
+function web_render_page_content($module, $template, $data = [], $layout = 'main') {
     global $_web_render_global_params;
     
     $templateFile = __DIR__.'/templates/'.$module.'/'.$template.'.phtml';
@@ -27,7 +27,10 @@ function web_render_page($module, $template, $data = [], $layout = 'main') {
     extract((array)$_web_render_global_params);
     require $templateFile;
     $content = ob_get_clean();
+    ob_start();
     require $layoutFile;
+    $result = ob_get_clean();
+    return $result;
 }
 
 function web_render_add_data ($key, $data) {
