@@ -23,10 +23,10 @@ function core_dump($data, $data2 = null) {
     echo '</pre>';
 }
 
-function _core_error_handler($code, $msg, $context, $line) {
+function _core_error_handler($code, $msg, $lie, $line) {
     static $cwd;
     
-    if(!$cwd) {
+    if (!$cwd) {
         $cwd = getcwd();
     }
     
@@ -40,7 +40,7 @@ function _core_error_handler($code, $msg, $context, $line) {
     
     error_reporting($prevErrorLvl);
     
-    core_dump($msg, $line,  $context, $trace);
+    core_dump($msg , $lie . ':' . $line, $trace);
 }
 
 set_error_handler('_core_error_handler', E_ALL);

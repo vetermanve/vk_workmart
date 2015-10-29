@@ -4,6 +4,8 @@ lets_sure_loaded('web_render');
 
 lets_use('core');
 
+global $_web_render_global_params;
+
 $_web_render_global_params = [];
 
 function web_render_page_content($module, $template, $data = [], $layout = 'main') {

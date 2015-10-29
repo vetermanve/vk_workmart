@@ -23,21 +23,24 @@ function web_controller_auth_redirect () {
 }
 
 function web_controller_auth_register () {
+    lets_use('core_storage_db');
+    
     $email = web_router_get_param('email');
+    
     if (!$email) {
         web_router_render_page('auth', 'register', ['msg' => 'Введите email', 'wrong' => 'email',]);
         return ;
     }
     
-    preg_match('[\w\d.-_]+@[\w\d.-_]+\.[\w]+', $email, $matches);
+    preg_match('/[\w\d]+@[\w\d]+[\w\d\.]+/', $email, $matches);
     
-    if(!$matches[1]) {
+    if(!isset($matches[0])) {
         web_router_render_page('auth', 'register', ['msg' => 'Введите корректный email', 'wrong' => 'email',]);
         return ;
     }
     
     $authUser = core_storage_db_get_row_one('users', '*', [
-        'email' => $email,
+        ['email', $email],
     ]);
     
     if (!$authUser) {

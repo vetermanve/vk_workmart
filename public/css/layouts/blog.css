@@ -181,3 +181,13 @@ h3 {
         bottom: 0;
     }
 }
+
+.v-ellip, v\:ellip {
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    -moz-binding: url( 'bindings.xml#ellipsis' );
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    max-width: 100%;
+}

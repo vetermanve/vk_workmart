@@ -2,7 +2,7 @@
 
 lets_sure_loaded('core_config');
 
-$_core_config_data = [];
+global $_core_config_data;
 
 function core_config_load () {
     global $_core_config_data;
@@ -46,5 +46,6 @@ function core_config_load () {
 
 function core_config_get($key, $default = null) {
     global $_core_config_data;
+    
     return isset ($_core_config_data[$key]) ? $_core_config_data[$key] : $default; 
 }

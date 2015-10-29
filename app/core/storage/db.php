@@ -67,11 +67,11 @@ function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
         ($whereString ? 'WHERE '. $whereString : '');
     
     if (isset($cond['ORDER BY'])) {
-        $queryString .= 'ORDER BY '.$cond['ORDER BY'];
+        $queryString .= ' ORDER BY '.$cond['ORDER BY'];
     }
     
     if (isset($cond['LIMIT'])) {
-        $queryString .= 'LIMIT '.(int)$cond['LIMIT'];     
+        $queryString .= ' LIMIT '.(int)$cond['LIMIT'];     
     }
     
     $res = mysqli_query($connection, $queryString);
@@ -134,23 +134,38 @@ function _core_storage_db_prepare_insert_row($connection, $insertBind) {
 } 
 
 function _core_storage_db_build_where ($connection, $where) {
-    if (!is_array($where[0])) {
+    if (!isset($where[0])) {
         $where = [$where];
     }
     
     $whereString = '';
     foreach ($where as $whereParam) {
-        list ($field, $operation, $value) = $whereParam;
+        if (count($whereParam) == 2) {
+            list ($field, $value) = $whereParam;
+            $operation = '=';
+        } else {
+            list ($field, $operation, $value) = $whereParam;
+        }
+        
         $field = mysqli_real_escape_string($connection, $field);
         
         if (is_array($value)) {
             foreach ($value as &$val) {
-               $val = mysqli_real_escape_string($connection, $val);
+                $val = mysqli_real_escape_string($connection, $val);
+                if (!is_numeric($val)) {
+                    $val = '"'.$val.'"';    
+                }
             }
             
             $whereString.= '('.$field.' in ('.implode($value).')'.')';
         } else {
-            $whereString .= ($whereString ? ' AND ' : '').'('.$field.' '.$operation.' '.mysqli_real_escape_string($connection, $value).')' ;       
+            $val = mysqli_real_escape_string($connection, $value);
+            
+            if (!is_numeric($val)) {
+                $val = '"'.$val.'"';
+            }
+            
+            $whereString .= ($whereString ? ' AND ' : '').'('.$field.' '.$operation.' '.$val.')' ;       
         }
     }
     
