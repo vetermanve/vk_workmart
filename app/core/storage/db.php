@@ -57,7 +57,7 @@ function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
     
     if (!$connection) {
         trigger_error('Lost connection from db', E_USER_WARNING);
-        return [];    
+        return [];
     }
     
     $whereString =  $where ? _core_storage_db_build_where($connection, $where) : ''; 
@@ -135,6 +135,11 @@ function _core_storage_db_prepare_insert_row($connection, $insertBind) {
 
 function _core_storage_db_build_where ($connection, $where) {
     if (!isset($where[0])) {
+        core_error('incorrect where bind: '.json_encode($where));
+        return '0';
+    }
+    
+    if (!is_array($where[0])) {
         $where = [$where];
     }
     
