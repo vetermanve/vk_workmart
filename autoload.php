@@ -1,6 +1,8 @@
 <?php
 
-$_loadCache = [];
+global $_letsLoadCache;
+
+$_letsLoadCache = [];
 
 register_shutdown_function(function () {
     $error = error_get_last();
@@ -12,7 +14,7 @@ register_shutdown_function(function () {
 // require-style autoloader
 function lets_use ($moduleName, $anotherModule = null) {
     static $loadedModules;
-    global $_loadCache;
+    global $_letsLoadCache;
     $modules = $anotherModule ? func_get_args() : [$moduleName];
     
     foreach ($modules as $module) {
@@ -31,7 +33,7 @@ function lets_use ($moduleName, $anotherModule = null) {
             $startLoadTime = microtime(1);
             require_once ($requiredFile);
             
-            if (!isset ($_loadCache[$module])) {
+            if (!isset ($_letsLoadCache[$module])) {
                 _lets_report_load_error('Required file not provide @lets_sure_loaded', $module, $requiredFile);    
             }
             
@@ -41,8 +43,8 @@ function lets_use ($moduleName, $anotherModule = null) {
 };
 
 function lets_sure_loaded($moduleName) {
-    global $_loadCache;
-    $_loadCache[$moduleName] = 1;
+    global $_letsLoadCache;
+    $_letsLoadCache[$moduleName] = 1;
 }
 
 function _lets_report_load_error($error, $moduleName, $location) {
