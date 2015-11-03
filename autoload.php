@@ -28,6 +28,7 @@ function lets_use ($moduleName, $anotherModule = null) {
             
             if (!file_exists($requiredFile)) {
                 _lets_report_load_error('File not found', $module, $requiredFile);
+                return ;
             }
             
             $startLoadTime = microtime(1);

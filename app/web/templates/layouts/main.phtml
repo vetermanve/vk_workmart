@@ -6,7 +6,7 @@
     <title>Let's Do IT - серьзеный сделки</title>
     
     <meta name="description" content="Упрощенная система заказов">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, max-scale=1.0">
     
     <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
     <!--[if lte IE 8]>
@@ -27,12 +27,24 @@
 
                 <nav class="nav">
                     <ul class="nav-list">
-                        <li class="nav-item">
-                            <a class="pure-button" href="/auth/auth">Войти <?=isset($is_auth) ? $is_auth : ''  ?></a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="pure-button" href="/auth/register">Присоедениться</a>
-                        </li>
+                        <? if(!_v('is_auth')): ?>
+                            <li class="nav-item">
+                                <a class="pure-button" href="/auth/auth">Войти</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="pure-button" href="/auth/register">Присоедениться</a>
+                            </li>
+                        <? else : ?>
+                            <li class="nav-item">
+                                <a class="pure-button" href="/user/orders">Сделать заказ</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="pure-button" href="/user/orders">Заказы</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="pure-button" href="/user/profile">Настройки</a>
+                            </li>
+                        <? endif; ?>
                     </ul>
                 </nav>
             </div>
