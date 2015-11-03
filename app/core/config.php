@@ -2,6 +2,8 @@
 
 lets_sure_loaded('core_config');
 
+const CORE_CONFIG_REDIS_MAIN = 'main';
+
 global $_core_config_data;
 
 function core_config_load () {
@@ -26,8 +28,12 @@ function core_config_load () {
                 ],
             ],
             'redis' => [
-                'host' => '127.0.0.1',
-                'port' => '3738', //fixme
+                CORE_CONFIG_REDIS_MAIN => [
+                    'host' => '127.0.0.1',
+                    'port' => '6379',
+                    'connect_timeout'=> 1,
+                    'read_timeout'=> 3,
+                ],
             ],
             'db_tables' => [
                 'db_part1' => [
