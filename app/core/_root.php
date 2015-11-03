@@ -2,6 +2,10 @@
 
 lets_sure_loaded('core');
 
+global $_core_internal_log;
+
+$_core_internal_log = [];
+
 function core_init($appRole) {
     lets_use('core_config');
     core_config_load();
@@ -12,7 +16,13 @@ function core_error($data) {
 }
 
 function core_log($sting) {
-    echo trim($sting)."\n";
+    global $_core_internal_log;
+    $_core_internal_log[] = trim($sting);
+}
+
+function core_getlog() {
+    global $_core_internal_log;
+    return $_core_internal_log;
 }
 
 function core_dump($data, $data2 = null) {
