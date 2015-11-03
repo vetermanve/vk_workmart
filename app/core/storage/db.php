@@ -4,6 +4,10 @@ lets_sure_loaded('core_storage_db');
 
 lets_use('core_config');
 
+global $_core_storage_db_started_transactions;
+
+$_core_storage_db_started_transactions = [];
+
 /**
  * @param $dbPart
  *
@@ -92,6 +96,11 @@ function core_storage_db_get_row_one ($table, $cols, $where, $cond = []) {
     return $result ? $result[0] : $result;    
 }
 
+function core_storage_db_get_last_error($table) {
+    $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
+    return $connection->error.' #'.$connection->errno;
+}
+
 function core_storage_db_insert_row ($table, $bind, $ignore = false) {
     $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
     
@@ -112,7 +121,85 @@ function core_storage_db_insert_row ($table, $bind, $ignore = false) {
         return [];
     }
     
+    $lastInsertId = mysqli_insert_id($connection);
+    
+    return $lastInsertId !== 0 ? $lastInsertId : $res;
+}
+
+function core_storage_db_transaction_begin($table) {
+    global $_core_storage_db_started_transactions;
+    
+    $part = _core_storage_get_db($table);
+    
+    // transaction already started
+    if (isset($_core_storage_db_started_transactions[$part])) {
+        return true;
+    }
+    
+    $part = _core_storage_get_db($table);
+    $connection = _core_storage_db_get_connection($part);
+    
+    $res = mysqli_begin_transaction($connection);
+    
+    if (!$res) {
+        trigger_error('cant start transaction on part: '.$part.' for table '.$table);
+        return false;
+    }
+    
+    $_core_storage_db_started_transactions[$part] = $connection;
+    
+    core_shutdown_add_check('db_transactions_end_check', 'core_storage_db_transactions_end_check', false);
+    
     return $res;
+}
+
+function core_storage_db_transactions_commit_all() {
+    global $_core_storage_db_started_transactions;
+    
+    if (!$_core_storage_db_started_transactions) {
+        core_log(__FUNCTION__.' called but no started transactions');
+        return true;
+    }
+    
+    $allResult = true;
+    
+    foreach ($_core_storage_db_started_transactions as $part => $connection) {
+        $res = mysqli_commit($connection);
+        if (!$res) {
+            core_error('fail commit transaction on part: '.$part);
+        }
+        $allResult = $allResult && $res;
+    }
+    
+    return $allResult;
+}
+
+function core_storage_db_transactions_rollback_all() {
+    global $_core_storage_db_started_transactions;
+    
+    if (!$_core_storage_db_started_transactions) {
+        core_log(__FUNCTION__.' called but no started transactions');
+        return true;
+    }
+    
+    $allResult = true;
+    
+    foreach ($_core_storage_db_started_transactions as $part => $connection) {
+        $res = mysqli_rollback($connection);
+        if (!$res) {
+            core_error('fail rollback transaction on part: '.$part);
+        }
+        $allResult = $allResult && $res;
+    }
+    
+    return $allResult;
+}
+
+function core_storage_db_transactions_end_check() {
+    global $_core_storage_db_started_transactions;
+    if (!empty($_core_storage_db_started_transactions)) {
+        core_error('not ended transactions found on shutdown');
+    }    
 }
 
 function _core_storage_db_prepare_insert_row($connection, $insertBind) {
