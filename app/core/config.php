@@ -39,6 +39,7 @@ function core_config_load () {
                 'db_part1' => [
                     '*',
                     'orders',
+                    'sessions',
                 ],
                 'db_part2' => [
                     'users',

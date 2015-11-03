@@ -56,7 +56,9 @@ function _core_storage_db_get_connection ($dbPart) {
 }
 
 function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
-    $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
+    $part = _core_storage_get_db($table);
+    $connection = _core_storage_db_get_connection($part);
+    
     $cols = (array)$cols;
     
     if (!$connection) {
@@ -94,6 +96,14 @@ function core_storage_db_get_row_one ($table, $cols, $where, $cond = []) {
     ]);
     
     return $result ? $result[0] : $result;    
+}
+
+function core_storage_db_get_value ($table, $col, $where, $cond = []) {
+    $result = core_storage_db_get_row($table, $col, $where, [
+        'LIMIT' => 1,
+    ]);
+    
+    return $result ? $result[$col] : $result;
 }
 
 function core_storage_db_get_last_error($table) {
@@ -148,6 +158,7 @@ function core_storage_db_transaction_begin($table) {
     
     $_core_storage_db_started_transactions[$part] = $connection;
     
+    lets_use('core_shutdown');
     core_shutdown_add_check('db_transactions_end_check', 'core_storage_db_transactions_end_check', false);
     
     return $res;
@@ -270,9 +281,9 @@ function _core_storage_get_db($table) {
     if (!$cache) {
         $tablesConfig = core_config_get('db_tables', []);
         
-        foreach ($tablesConfig as $dbPart => $tables) {
-            foreach ($tables as $table) {
-                $cache[$table] = $dbPart;    
+        foreach ($tablesConfig as $dbPart => $partTables) {
+            foreach ($partTables as $partTable) {
+                $cache[$partTable] = $dbPart;    
             }
         }
     }

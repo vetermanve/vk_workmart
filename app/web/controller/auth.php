@@ -8,18 +8,13 @@ const _AUTH_SALT_SECRET = 'AS@)Nsy8#,a!Rsdf^$';
 
 
 function web_controller_auth_auth () {
-    $userName = web_router_get_param('email');
-    $pass = web_router_get_param('pass');
-    
-    $salt = md5(microtime(1)._AUTH_SALT_SECRET.mt_rand(1, 199999999));
-    $hash = md5($pass._AUTH_HASH_SECRET.$salt);
-    
-    web_router_render_page('auth', 'auth', []);
-}
-
-function web_controller_auth_redirect () {
-    lets_use('web_response');
-    web_response_redirect('/auth/nopage');
+//    $userName = web_router_get_param('email');
+//    $pass = web_router_get_param('pass');
+//    
+//    $salt = md5(microtime(1)._AUTH_SALT_SECRET.mt_rand(1, 199999999));
+//    $hash = md5($pass._AUTH_HASH_SECRET.$salt);
+//    
+//    web_router_render_page('auth', 'auth', []);
 }
 
 function web_controller_auth_register () {
@@ -39,11 +34,11 @@ function web_controller_auth_register () {
         return ;
     }
     
-    $authUser = core_storage_db_get_row_one('users', '*', [
-        ['email', $email],
-    ]);
+    lets_use('user_register');
     
-    if ($authUser) {
+    $authUserId = user_register_check_email_exists($email);
+    
+    if ($authUserId) {
         web_router_render_page('auth', 'register', ['msg' => 'Пользователь с таким email уже существует', 'wrong' => 'email',]);
         return ;
     }
@@ -60,32 +55,16 @@ function web_controller_auth_register () {
         return ;
     }
     
-    $salt = md5(microtime(1)._AUTH_SALT_SECRET.mt_rand(1, 199999999));
-    $passHash = md5($pass._AUTH_HASH_SECRET.$salt);
+    $userId = user_register_new_user($userName, $email, $pass);
     
-    lets_use('core_storage_db');
-    
-    $res = core_storage_db_insert_row('users', [
-        'name' => $userName,
-        'salt' => $salt,
-        'pass' => $passHash,
-        'email' => $email,
-    ]);
-    
-    if(!$res) {
+    if (!$userId) {
         web_router_render_page('auth', 'register', ['msg' => 'Ошибка при сохранении пользвателя, повторите позднее', 'wrong' => 'error',]);
         return ;
     }
     
+    lets_use('user_session');
+    
+    user_session_write_session_cookie($userId, user_session_get_user_token($userId), 86400 * 30);
+    
     web_router_redirect('/');
-}
-
-function web_controller_auth_create () {
-    lets_use('core_storage_db');
-    
-    $res = core_storage_db_insert_row('users', ['name' => 'Test User '.date('c'),]);
-    core_dump($res);
-    
-    
-//    web_render_page('auth', 'register', []);
 }

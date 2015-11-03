@@ -10,6 +10,7 @@ const _WEB_RESPONSE_HEADERS      = 'headers';
 global $_web_response_content_proto;
 global $_web_response_content;
 global $_web_response_lock;
+global $_web_response_cookie;
 
 $_web_response_content_proto = [
     _WEB_RESPONSE_CODE         => 200,
@@ -19,12 +20,14 @@ $_web_response_content_proto = [
 ];
 
 $_web_response_content = $_web_response_content_proto;
+$_web_response_cookie = [];
 
 $_web_response_lock = false;
 
 function web_response_flush () {
     global $_web_response_lock;
     global $_web_response_content;
+    global $_web_response_cookie;
     
     // check response already sent
     if ($_web_response_lock) {
@@ -41,6 +44,12 @@ function web_response_flush () {
     // first of all send content type if set
     if ($_web_response_content[_WEB_RESPONSE_CONTENT_TYPE]) {
         header('Content-Type: '.$_web_response_content[_WEB_RESPONSE_CONTENT_TYPE].'; charset=utf-8');    
+    }
+    
+    if ($_web_response_cookie) {
+        foreach ($_web_response_cookie as $name => $params) {
+            call_user_func_array('setcookie', $params);
+        }
     }
     
     // send additional headers if set
@@ -101,4 +110,12 @@ function web_response_add_header($header, $name = null) {
     } else{
         $_web_response_content[_WEB_RESPONSE_HEADERS][$name] = $header;
     }
+}
+
+function web_response_set_cookie ($key, $value, $ttl = 86400, $path = '/', $domain = null) {
+    global $_web_response_cookie;
+    
+    $expire = time() + $ttl;
+    
+    $_web_response_cookie[$key] = [$key, $value, $expire, $path, $domain];
 }

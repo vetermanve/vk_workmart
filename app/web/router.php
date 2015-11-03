@@ -26,6 +26,19 @@ function web_router_route($uri, $get, $post) {
     $module = 'web_controller_'.$controllerName;
     lets_use($module);
     
+    // pre dispatch
+    $function = $module.'_precall';
+    
+    if (function_exists($function)) {
+        try {
+            $function();
+        } catch (Exception $e) {
+            web_router_error('');
+            return ;
+        }
+    }
+    
+    // dispatch
     $function = $module.'_'.$actionName;
     
     if (!function_exists($function)) {

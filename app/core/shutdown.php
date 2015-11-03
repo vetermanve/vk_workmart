@@ -16,7 +16,7 @@ function core_shutdown_add_check ($name, $callable, $replace = true) {
     }
     
     if (!$registered) {
-        register_shutdown_function('core_shutdown_process_callbacks');
+        register_shutdown_function('core_shutdown_process_checks');
     }
     
     if (!is_callable($callable)) {
