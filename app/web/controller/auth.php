@@ -8,13 +8,40 @@ const _AUTH_SALT_SECRET = 'AS@)Nsy8#,a!Rsdf^$';
 
 
 function web_controller_auth_auth () {
-//    $userName = web_router_get_param('email');
-//    $pass = web_router_get_param('pass');
-//    
-//    $salt = md5(microtime(1)._AUTH_SALT_SECRET.mt_rand(1, 199999999));
-//    $hash = md5($pass._AUTH_HASH_SECRET.$salt);
-//    
-//    web_router_render_page('auth', 'auth', []);
+    $email = web_router_get_param('email');
+    $pass = web_router_get_param('pass');
+
+    if ($email) {
+        lets_use('user_register');
+        
+        $userId = user_register_get_user_id_by_email($email);
+        if ($userId) {
+            lets_use('user_session');
+            core_log('user found: '.$userId);
+            
+            $realSecret = user_session_get_secret($userId);
+            $checkSecret = user_session_build_secret($pass);
+    
+            if ($realSecret === $checkSecret) {
+                $token = user_session_build_token($userId, $checkSecret);
+                user_session_write_session_cookie($userId, $token, 86400*30);
+    
+                web_response_redirect('/');
+                return ;
+            }
+            
+            core_dump('secret check fails ', $userId, $realSecret, $checkSecret);
+        }
+        
+        web_router_render_page('auth', 'auth', [
+            'msg' => 'Для данного адреса почты и пароля не найдено ни одного пользователя.',
+        ]);
+        
+        return ;
+    }
+    
+    web_router_render_page('auth', 'auth');
+    
 }
 
 function web_controller_auth_register () {
@@ -36,7 +63,7 @@ function web_controller_auth_register () {
     
     lets_use('user_register');
     
-    $authUserId = user_register_check_email_exists($email);
+    $authUserId = user_register_get_user_id_by_email($email);
     
     if ($authUserId) {
         web_router_render_page('auth', 'register', ['msg' => 'Пользователь с таким email уже существует', 'wrong' => 'email',]);
@@ -64,7 +91,10 @@ function web_controller_auth_register () {
     
     lets_use('user_session');
     
-    user_session_write_session_cookie($userId, user_session_get_user_token($userId), 86400 * 30);
+    $secret = user_session_get_secret($userId);
+    $token  = user_session_build_token($userId, $secret);
+    
+    user_session_write_session_cookie($userId, $token, 86400 * 30);
     
     web_router_redirect('/');
 }

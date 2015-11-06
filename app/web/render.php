@@ -10,6 +10,12 @@ global $_web_render_scope_params;
 $_web_render_global_params = [];
 $_web_render_scope_params = [];
 
+/**
+ * @param        $key
+ * @param string $default
+ *
+ * @return string|array
+ */
 function _v($key, $default = '') {
     global $_web_render_global_params;
     global $_web_render_scope_params;
@@ -23,6 +29,10 @@ function _v($key, $default = '') {
     }
     
     return $default;
+}
+
+function _e($string) {
+    return nl2br(htmlspecialchars(strip_tags($string, '<br><br/><br />')));
 }
 
 function web_render_page_content($module, $template, $data = [], $layout = 'main') {

@@ -1,0 +1,21 @@
+<div class="posts">
+    <h1 class="content-subhead">Recent Posts</h1>
+    
+    <? foreach (_v('posts',[]) as $post): ?>
+    <section class="post">
+        <header class="post-header">
+            <h2 class="post-title"><?=_e($post['title']) ?></h2>
+            
+            <p class="post-meta">
+                Заказчик: <a class="post-author" href="#"><?=_e($authors[$post['author_id']]['name']) ?></a>
+            </p>
+        </header>
+        
+        <div class="post-description">
+            <p>
+                <?=_e($post['desc']) ?>
+            </p>
+        </div>
+    </section>
+    <? endforeach; ?>
+</div>

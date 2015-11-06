@@ -233,7 +233,7 @@ function _core_storage_db_prepare_insert_row($connection, $insertBind) {
 
 function _core_storage_db_build_where ($connection, $where) {
     if (!isset($where[0])) {
-        core_error('incorrect where bind: '.json_encode($where));
+        core_error('incorrect where bind: '.json_encode($where), __FUNCTION__);
         return '0';
     }
     

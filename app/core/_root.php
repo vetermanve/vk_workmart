@@ -11,26 +11,34 @@ function core_init($appRole) {
     core_config_load();
 }
 
-function core_error($data) {
-    core_log('Error! '.$data);
+function core_error($data, $function = '') {
+    core_log('Error! '.$data.' in @'.$function);
 }
 
-function core_log($sting) {
+function core_log($sting, $function = '') {
     global $_core_internal_log;
-    $_core_internal_log[] = trim($sting);
+    $_core_internal_log[] = trim($sting).($function ? ' <= ' .$function : '');
 }
 
-function core_getlog() {
+function core_get_log() {
     global $_core_internal_log;
     return $_core_internal_log;
 }
 
+function core_has_log() {
+    global $_core_internal_log;
+    
+    return count($_core_internal_log);
+}
+
 function core_dump($data, $data2 = null) {
+    ob_start();
     echo '<pre>';
     foreach (func_get_args() as $val) {
         var_dump($val);    
     }
     echo '</pre>';
+    core_log(ob_get_clean());
 }
 
 function _core_error_handler($code, $msg, $lie, $line) {

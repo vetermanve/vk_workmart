@@ -34,7 +34,7 @@ function user_register_new_user($name, $email, $pass) {
     return $userId;
 }
 
-function user_register_check_email_exists($email) {
+function user_register_get_user_id_by_email($email) {
     lets_use('core_storage_db');
     
     $authUserId = core_storage_db_get_value('users', 'id', [
