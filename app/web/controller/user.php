@@ -13,13 +13,15 @@ function web_controller_user_index () {
 }
 
 function web_controller_user_profile () {
-    web_router_render_page('index', 'index');
+    lets_use('user_self');
+    
+    $balance = user_self_balance();
+    
+    web_router_render_page('user', 'profile', [
+        'balance' => $balance,
+    ]);
 }
 
 function web_controller_user_orders () {
-    web_router_render_page('index', 'index');
-}
-
-function web_controller_user_oreders () {
     web_router_render_page('index', 'index');
 }

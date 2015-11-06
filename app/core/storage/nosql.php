@@ -60,7 +60,28 @@ function core_storage_nosql_set($redisId, $key, $value) {
         return null;
     }
     
+    if ($value === null) {
+        return $connect->del($key);
+    }
+    
     return $connect->set($key, $value);
+}
+
+function core_storage_nosql_setnx($redisId, $key, $value, $expire) {
+    $connect = _core_storage_nosql_connect($redisId);
+    
+    if (!$connect) {
+        core_error('Missing connection to redis on '.__FUNCTION__);
+        return null;
+    }
+    
+    $res = $connect->setnx($key, $value);
+    
+    if ($res) {
+       $connect->expire($key, $expire); 
+    }
+    
+    return $res;
 }
 
 function core_storage_nosql_get_prefix($redisId, $prefix, $key) {

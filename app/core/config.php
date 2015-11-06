@@ -43,6 +43,8 @@ function core_config_load () {
                 ],
                 'db_part2' => [
                     'users',
+                    'balance',
+                    'transactions',
                 ],
             ],
         ];    

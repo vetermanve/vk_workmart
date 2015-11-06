@@ -17,7 +17,7 @@ function core_error($data, $function = '') {
 
 function core_log($sting, $function = '') {
     global $_core_internal_log;
-    $_core_internal_log[] = trim($sting).($function ? ' <= ' .$function : '');
+    $_core_internal_log[] =($function ? '['.$function.'] ' : ''). trim($sting);
 }
 
 function core_get_log() {

@@ -1,0 +1,19 @@
+<div class="pure-u-1">
+    <h1>Ввод стредств</h1>
+    <p>
+        В данный момент в качестве ввода стредств вы можете взять денег из благотварительного фонда <br>
+        В фонде сейчас <?=_v('fond_money'); ?> денежных единиц
+    </p>
+    <form class="pure-form pure-form-aligned" method="post" action="/billing/refill">
+        <fieldset>
+            <div class="pure-control-group">
+                <label for="sum">Введите сумму</label>
+                <input id="sum" name="sum" type="text" placeholder="100" value="100">
+            </div>
+            
+            <div class="pure-controls">
+                <button type="submit" class="pure-button pure-button-primary">Взять</button>
+            </div>
+        </fieldset>
+    </form>
+</div>
