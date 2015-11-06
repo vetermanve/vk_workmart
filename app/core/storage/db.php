@@ -55,6 +55,15 @@ function _core_storage_db_get_connection ($dbPart) {
     return $connections[$dbPart];
 }
 
+function _core_storage_db_has_error($connection, $table) {
+    if ($connection->error) {
+        trigger_error($connection->error .' in table: '.$table);
+        return true;
+    }
+    
+    return false;
+}
+
 function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
     $part = _core_storage_get_db($table);
     $connection = _core_storage_db_get_connection($part);
@@ -70,7 +79,7 @@ function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
     
     $queryString = 'SELECT '.implode(', ', $cols).' '.
         ' FROM '.$table.' '.
-        ($whereString ? 'WHERE '. $whereString : '');
+        ($whereString !==  '' ? 'WHERE '. $whereString : '');
     
     if (isset($cond['ORDER BY'])) {
         $queryString .= ' ORDER BY '.$cond['ORDER BY'];
@@ -82,8 +91,7 @@ function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
     
     $res = mysqli_query($connection, $queryString);
     
-    if ($res === false || $connection->error) {
-        trigger_error($connection->error);
+    if (_core_storage_db_has_error($connection, $table)) {
         return [];
     }
     
@@ -108,7 +116,7 @@ function core_storage_db_get_value ($table, $col, $where, $cond = []) {
 
 function core_storage_db_get_last_error($table) {
     $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
-    return $connection->error.' #'.$connection->errno;
+    return $connection->error ? $connection->error.' #'.$connection->errno : null;
 }
 
 function core_storage_db_insert_row ($table, $bind, $ignore = false) {
@@ -126,9 +134,39 @@ function core_storage_db_insert_row ($table, $bind, $ignore = false) {
     
     $res = mysqli_query($connection, $queryString);
     
-    if ($res === false || $connection->error) {
-        trigger_error($connection->error);
-        return [];
+    if (_core_storage_db_has_error($connection, $table)) {
+        return false;
+    }
+    
+    $lastInsertId = mysqli_insert_id($connection);
+    
+    return $lastInsertId !== 0 ? $lastInsertId : $res;
+}
+
+function core_storage_db_set ($table, $bind) {
+    $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
+    
+    if (!$connection) {
+        trigger_error('Lost connection from db', E_USER_WARNING);
+        return false;
+    }
+    
+    list ($colsNames, $values) = _core_storage_db_prepare_insert_row($connection, $bind);
+    
+    $duplicateString = [];
+    
+    foreach ($colsNames as $colName) {
+        $duplicateString[] = $colName.'=VALUES('.$colName.')';
+    }
+    
+    $queryString = 'INSERT INTO '.$table.' ('.implode(', ', $colsNames).') '.
+        'VALUES ('.implode(',', $values).') '.
+        'ON DUPLICATE KEY UPDATE '.implode(', ', $duplicateString);
+    
+    $res = mysqli_query($connection, $queryString);
+    
+    if (_core_storage_db_has_error($connection, $table)) {
+        return false;
     }
     
     $lastInsertId = mysqli_insert_id($connection);
@@ -151,6 +189,10 @@ function core_storage_db_transaction_begin($table) {
     
     $res = mysqli_begin_transaction($connection);
     
+    if (_core_storage_db_has_error($connection, $table)) {
+        return false;
+    }
+    
     if (!$res) {
         trigger_error('cant start transaction on part: '.$part.' for table '.$table);
         return false;
@@ -172,17 +214,14 @@ function core_storage_db_transactions_commit_all() {
         return true;
     }
     
-    $allResult = true;
-    
     foreach ($_core_storage_db_started_transactions as $part => $connection) {
-        $res = mysqli_commit($connection);
-        if (!$res) {
+        if (!mysqli_commit($connection)) {
             core_error('fail commit transaction on part: '.$part);
+            return false;
         }
-        $allResult = $allResult && $res;
     }
     
-    return $allResult;
+    return true;
 }
 
 function core_storage_db_transactions_rollback_all() {
