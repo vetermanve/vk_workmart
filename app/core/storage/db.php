@@ -13,7 +13,8 @@ $_core_storage_db_started_transactions = [];
  *
  * @return mysqli|bool
  */
-function _core_storage_db_get_connection ($dbPart) {
+function _core_storage_db_get_connection($dbPart)
+{
     static $config;
     static $connections;
     
@@ -27,25 +28,19 @@ function _core_storage_db_get_connection ($dbPart) {
     
     if (!isset($config[$dbPart])) {
         core_dump($config);
-        trigger_error($dbPart.' db connection config not found');
+        trigger_error($dbPart . ' db connection config not found');
+        
         return false;
     }
     
     $partConfig = $config[$dbPart];
     
-    $mysqli = mysqli_connect(
-        $partConfig['host'], 
-        $partConfig['user'], 
-        $partConfig['pass'], 
-        (isset($partConfig['db_name']) 
-            ? $partConfig['db_name'] 
-            : $dbPart 
-        )
-    );
+    $mysqli = mysqli_connect($partConfig['host'], $partConfig['user'], $partConfig['pass'],
+        (isset($partConfig['db_name']) ? $partConfig['db_name'] : $dbPart));
     
     if (!$mysqli) {
-        trigger_error('Cannot establish connection to db '.$dbPart.' with given config. Error: '.mysqli_connect_error().
-           '; code: '.mysqli_connect_errno(), E_USER_ERROR);
+        trigger_error('Cannot establish connection to db ' . $dbPart . ' with given config. Error: ' . mysqli_connect_error() . '; code: ' . mysqli_connect_errno(),
+            E_USER_ERROR);
         
         return false;
     }
@@ -55,58 +50,71 @@ function _core_storage_db_get_connection ($dbPart) {
     return $connections[$dbPart];
 }
 
-function _core_storage_db_has_error($connection, $table) {
+/**
+ * @param mysqli $connection
+ * @param string $table
+ *
+ * @param string $query
+ *
+ * @return bool
+ */
+function _core_storage_db_has_error($connection, $table, $query = '')
+{
     if ($connection->error) {
-        trigger_error($connection->error .' in table: '.$table);
+        trigger_error($connection->error . ' in table: ' . $table.' on query: '.$query);
+        
         return true;
     }
     
     return false;
 }
 
-function core_storage_db_get_row ($table, $cols, $where, $cond = []) {
-    $part = _core_storage_get_db($table);
+function core_storage_db_get_row($table, $cols, $where, $cond = [])
+{
+    $part       = _core_storage_get_db($table);
     $connection = _core_storage_db_get_connection($part);
     
     $cols = (array)$cols;
     
     if (!$connection) {
         trigger_error('Lost connection from db', E_USER_WARNING);
+        
         return [];
     }
     
-    $whereString =  $where ? _core_storage_db_build_where($connection, $where) : ''; 
+    $whereString = $where ? _core_storage_db_build_where($connection, $where) : '';
     
-    $queryString = 'SELECT '.implode(', ', $cols).' '.
-        ' FROM '.$table.' '.
-        ($whereString !==  '' ? 'WHERE '. $whereString : '');
+    $queryString = 'SELECT ' . implode(', ',
+            $cols) . ' ' . ' FROM ' . $table . ' ' . ($whereString !== '' ? 'WHERE ' . $whereString : '');
     
     if (isset($cond['ORDER BY'])) {
-        $queryString .= ' ORDER BY '.$cond['ORDER BY'];
+        $queryString .= ' ORDER BY ' . $cond['ORDER BY'];
     }
     
     if (isset($cond['LIMIT'])) {
-        $queryString .= ' LIMIT '.(int)$cond['LIMIT'];     
+        $queryString .= ' LIMIT ' . (int)$cond['LIMIT'];
     }
     
     $res = mysqli_query($connection, $queryString);
     
-    if (_core_storage_db_has_error($connection, $table)) {
+    if (_core_storage_db_has_error($connection, $table, $queryString)) {
         return [];
     }
     
-    return mysqli_fetch_assoc($res);   
+    return mysqli_fetch_assoc($res);
 }
 
-function core_storage_db_get_row_one ($table, $cols, $where, $cond = []) {
+function core_storage_db_get_row_one($table, $cols, $where, $cond = [])
+{
     $result = core_storage_db_get_row($table, $cols, $where, [
         'LIMIT' => 1,
     ]);
     
-    return $result ? $result[0] : $result;    
+    return $result ? $result[0] : $result;
 }
 
-function core_storage_db_get_value ($table, $col, $where, $cond = []) {
+function core_storage_db_get_value($table, $col, $where, $cond = [])
+{
     $result = core_storage_db_get_row($table, $col, $where, [
         'LIMIT' => 1,
     ]);
@@ -114,27 +122,31 @@ function core_storage_db_get_value ($table, $col, $where, $cond = []) {
     return $result ? $result[$col] : $result;
 }
 
-function core_storage_db_get_last_error($table) {
+function core_storage_db_get_last_error($table)
+{
     $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
-    return $connection->error ? $connection->error.' #'.$connection->errno : null;
+    
+    return $connection->error ? $connection->error . ' #' . $connection->errno : null;
 }
 
-function core_storage_db_insert_row ($table, $bind, $ignore = false) {
+function core_storage_db_insert_row($table, $bind, $ignore = false)
+{
     $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
     
     if (!$connection) {
         trigger_error('Lost connection from db', E_USER_WARNING);
+        
         return false;
     }
     
     list ($colsNames, $values) = _core_storage_db_prepare_insert_row($connection, $bind);
     
-    $queryString = 'INSERT '.($ignore ? 'IGNORE' : '').' INTO '.$table.' ('.implode(', ', $colsNames).') '.
-        ' VALUES ('.implode(',', $values).')';
+    $queryString = 'INSERT ' . ($ignore ? 'IGNORE' : '') . ' INTO ' . $table . ' (' . implode(', ',
+            $colsNames) . ') ' . ' VALUES (' . implode(',', $values) . ')';
     
     $res = mysqli_query($connection, $queryString);
     
-    if (_core_storage_db_has_error($connection, $table)) {
+    if (_core_storage_db_has_error($connection, $table, $queryString)) {
         return false;
     }
     
@@ -143,11 +155,13 @@ function core_storage_db_insert_row ($table, $bind, $ignore = false) {
     return $lastInsertId !== 0 ? $lastInsertId : $res;
 }
 
-function core_storage_db_set ($table, $bind) {
+function core_storage_db_set($table, $bind)
+{
     $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
     
     if (!$connection) {
         trigger_error('Lost connection from db', E_USER_WARNING);
+        
         return false;
     }
     
@@ -156,16 +170,15 @@ function core_storage_db_set ($table, $bind) {
     $duplicateString = [];
     
     foreach ($colsNames as $colName) {
-        $duplicateString[] = $colName.'=VALUES('.$colName.')';
+        $duplicateString[] = $colName . '=VALUES(' . $colName . ')';
     }
     
-    $queryString = 'INSERT INTO '.$table.' ('.implode(', ', $colsNames).') '.
-        'VALUES ('.implode(',', $values).') '.
-        'ON DUPLICATE KEY UPDATE '.implode(', ', $duplicateString);
+    $queryString = 'INSERT INTO ' . $table . ' (' . implode(', ', $colsNames) . ') ' . 'VALUES (' . implode(',',
+            $values) . ') ' . 'ON DUPLICATE KEY UPDATE ' . implode(', ', $duplicateString);
     
     $res = mysqli_query($connection, $queryString);
     
-    if (_core_storage_db_has_error($connection, $table)) {
+    if (_core_storage_db_has_error($connection, $table, $queryString)) {
         return false;
     }
     
@@ -174,7 +187,8 @@ function core_storage_db_set ($table, $bind) {
     return $lastInsertId !== 0 ? $lastInsertId : $res;
 }
 
-function core_storage_db_transaction_begin($table) {
+function core_storage_db_transaction_begin($table)
+{
     global $_core_storage_db_started_transactions;
     
     $part = _core_storage_get_db($table);
@@ -184,7 +198,7 @@ function core_storage_db_transaction_begin($table) {
         return true;
     }
     
-    $part = _core_storage_get_db($table);
+    $part       = _core_storage_get_db($table);
     $connection = _core_storage_db_get_connection($part);
     
     $res = mysqli_begin_transaction($connection);
@@ -194,7 +208,8 @@ function core_storage_db_transaction_begin($table) {
     }
     
     if (!$res) {
-        trigger_error('cant start transaction on part: '.$part.' for table '.$table);
+        trigger_error('cant start transaction on part: ' . $part . ' for table ' . $table);
+        
         return false;
     }
     
@@ -206,17 +221,20 @@ function core_storage_db_transaction_begin($table) {
     return $res;
 }
 
-function core_storage_db_transactions_commit_all() {
+function core_storage_db_transactions_commit_all()
+{
     global $_core_storage_db_started_transactions;
     
     if (!$_core_storage_db_started_transactions) {
-        core_log(__FUNCTION__.' called but no started transactions');
+        core_log(__FUNCTION__ . ' called but no started transactions');
+        
         return true;
     }
     
     foreach ($_core_storage_db_started_transactions as $part => $connection) {
         if (!mysqli_commit($connection)) {
-            core_error('fail commit transaction on part: '.$part);
+            core_error('fail commit transaction on part: ' . $part);
+            
             return false;
         }
     }
@@ -224,11 +242,13 @@ function core_storage_db_transactions_commit_all() {
     return true;
 }
 
-function core_storage_db_transactions_rollback_all() {
+function core_storage_db_transactions_rollback_all()
+{
     global $_core_storage_db_started_transactions;
     
     if (!$_core_storage_db_started_transactions) {
-        core_log(__FUNCTION__.' called but no started transactions');
+        core_log(__FUNCTION__ . ' called but no started transactions');
+        
         return true;
     }
     
@@ -237,7 +257,7 @@ function core_storage_db_transactions_rollback_all() {
     foreach ($_core_storage_db_started_transactions as $part => $connection) {
         $res = mysqli_rollback($connection);
         if (!$res) {
-            core_error('fail rollback transaction on part: '.$part);
+            core_error('fail rollback transaction on part: ' . $part);
         }
         $allResult = $allResult && $res;
     }
@@ -245,14 +265,16 @@ function core_storage_db_transactions_rollback_all() {
     return $allResult;
 }
 
-function core_storage_db_transactions_end_check() {
+function core_storage_db_transactions_end_check()
+{
     global $_core_storage_db_started_transactions;
     if (!empty($_core_storage_db_started_transactions)) {
         core_error('not ended transactions found on shutdown');
-    }    
+    }
 }
 
-function _core_storage_db_prepare_insert_row($connection, $insertBind) {
+function _core_storage_db_prepare_insert_row($connection, $insertBind)
+{
     $values = $colsNames = [];
     
     foreach ($insertBind as $colName => $value) {
@@ -260,19 +282,25 @@ function _core_storage_db_prepare_insert_row($connection, $insertBind) {
         
         if (is_null($value)) {
             $values[] = 'NULL';
-        } else if (is_numeric($value)) {
-            $values[] = $value;
-        } else {
-            $values[] = '"'.mysqli_real_escape_string($connection, $value).'"';
+        }
+        else {
+            if (is_numeric($value)) {
+                $values[] = $value;
+            }
+            else {
+                $values[] = '"' . mysqli_real_escape_string($connection, $value) . '"';
+            }
         }
     }
     
     return [$colsNames, $values];
-} 
+}
 
-function _core_storage_db_build_where ($connection, $where) {
+function _core_storage_db_build_where($connection, $where)
+{
     if (!isset($where[0])) {
-        core_error('incorrect where bind: '.json_encode($where), __FUNCTION__);
+        core_error('incorrect where bind: ' . json_encode($where), __FUNCTION__);
+        
         return '0';
     }
     
@@ -285,7 +313,8 @@ function _core_storage_db_build_where ($connection, $where) {
         if (count($whereParam) == 2) {
             list ($field, $value) = $whereParam;
             $operation = '=';
-        } else {
+        }
+        else {
             list ($field, $operation, $value) = $whereParam;
         }
         
@@ -295,26 +324,28 @@ function _core_storage_db_build_where ($connection, $where) {
             foreach ($value as &$val) {
                 $val = mysqli_real_escape_string($connection, $val);
                 if (!is_numeric($val)) {
-                    $val = '"'.$val.'"';    
+                    $val = '"' . $val . '"';
                 }
             }
             
-            $whereString.= '('.$field.' in ('.implode($value).')'.')';
-        } else {
+            $whereString .= '(' . $field . ' in (' . implode($value) . ')' . ')';
+        }
+        else {
             $val = mysqli_real_escape_string($connection, $value);
             
             if (!is_numeric($val)) {
-                $val = '"'.$val.'"';
+                $val = '"' . $val . '"';
             }
             
-            $whereString .= ($whereString ? ' AND ' : '').'('.$field.' '.$operation.' '.$val.')' ;       
+            $whereString .= ($whereString ? ' AND ' : '') . '(' . $field . ' ' . $operation . ' ' . $val . ')';
         }
     }
     
     return trim($whereString);
 }
 
-function _core_storage_get_db($table) {
+function _core_storage_get_db($table)
+{
     static $cache;
     
     if (!$cache) {
@@ -322,7 +353,7 @@ function _core_storage_get_db($table) {
         
         foreach ($tablesConfig as $dbPart => $partTables) {
             foreach ($partTables as $partTable) {
-                $cache[$partTable] = $dbPart;    
+                $cache[$partTable] = $dbPart;
             }
         }
     }
@@ -335,5 +366,5 @@ function _core_storage_get_db($table) {
         return $cache['*'];
     }
     
-    trigger_error('Db partition fot table: "'.$table.'"'.' not found',  E_USER_WARNING);
+    trigger_error('Db partition fot table: "' . $table . '"' . ' not found', E_USER_WARNING);
 }
