@@ -10,7 +10,7 @@ const BILLING_ACCOUNT_TYPE_INCOMING    = 4;
 const BILLING_ACCOUNT_DB_TABLE = 'accounts';
 
 const BILLING_ACCOUNT_FIELD_ID       = 'id';
-const BILLING_ACCOUNT_FIELD_OWNER_ID = 'id';
+const BILLING_ACCOUNT_FIELD_OWNER_ID = 'owner_id';
 const BILLING_ACCOUNT_FIELD_TYPE     = 'type';
 const BILLING_ACCOUNT_FIELD_CREATED  = 'created';
 
@@ -66,6 +66,6 @@ function billing_account_get_system_account() {
     return billing_account_get_account($id, BILLING_ACCOUNT_TYPE_USER_LOCKED, true);
 }
 
-function billing_account_get_income_account($userId) {
-    return billing_account_get_account($userId, BILLING_ACCOUNT_TYPE_INCOMING, true);
+function billing_account_get_income_account($partnerId) {
+    return billing_account_get_account($partnerId, BILLING_ACCOUNT_TYPE_INCOMING, true);
 }

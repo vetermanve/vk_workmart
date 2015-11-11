@@ -19,7 +19,7 @@ function billing_balance_get_account_amount($accountId) {
         BILLING_BALANCE_DB_TABLE, 
         BILLING_BALANCE_FIELD_AMOUNT, 
         [
-            BILLING_BALANCE_FIELD_ACCOUNT_ID => $accountId,
+            [BILLING_BALANCE_FIELD_ACCOUNT_ID, $accountId],
         ]
     );
     
