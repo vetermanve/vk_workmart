@@ -1,19 +1,19 @@
 <?php
 
-lets_sure_loaded('core_storage_db');
+lets_sure_loaded('storage_db');
 
 lets_use('core_config');
 
-global $_core_storage_db_started_transactions;
+global $_storage_db_started_transactions;
 
-$_core_storage_db_started_transactions = [];
+$_storage_db_started_transactions = [];
 
 /**
  * @param $dbPart
  *
  * @return mysqli|bool
  */
-function _core_storage_db_get_connection($dbPart)
+function _storage_db_get_connection($dbPart)
 {
     static $config;
     static $connections;
@@ -58,8 +58,9 @@ function _core_storage_db_get_connection($dbPart)
  *
  * @return bool
  */
-function _core_storage_db_has_error($connection, $table, $query = '')
+function _storage_db_has_error($connection, $table, $query = '')
 {
+    core_dump($query);
     if ($connection->error) {
         trigger_error($connection->error . ' in table: ' . $table.' on query: '.$query);
         
@@ -69,10 +70,10 @@ function _core_storage_db_has_error($connection, $table, $query = '')
     return false;
 }
 
-function core_storage_db_get_row($table, $cols, $where, $cond = [])
+function storage_db_get_rows($table, $cols, $where, $cond = [], $fetchAssocPrimaryKey = null)
 {
-    $part       = _core_storage_get_db($table);
-    $connection = _core_storage_db_get_connection($part);
+    $part       = _storage_db_get_part($table);
+    $connection = _storage_db_get_connection($part);
     
     $cols = (array)$cols;
     
@@ -82,10 +83,10 @@ function core_storage_db_get_row($table, $cols, $where, $cond = [])
         return [];
     }
     
-    $whereString = $where ? _core_storage_db_build_where($connection, $where) : '';
+    $whereString = $where ? _storage_db_build_where($connection, $where) : '';
     
     $queryString = 'SELECT ' . implode(', ',
-            $cols) . ' ' . ' FROM ' . $table . ' ' . ($whereString !== '' ? 'WHERE ' . $whereString : '');
+            $cols) . ' FROM ' . $table . ' ' . ($whereString !== '' ? 'WHERE ' . $whereString : '');
     
     if (isset($cond['ORDER BY'])) {
         $queryString .= ' ORDER BY ' . $cond['ORDER BY'];
@@ -95,43 +96,54 @@ function core_storage_db_get_row($table, $cols, $where, $cond = [])
         $queryString .= ' LIMIT ' . (int)$cond['LIMIT'];
     }
     
-    $res = mysqli_query($connection, $queryString);
+    $result = mysqli_query($connection, $queryString);
     
-    if (_core_storage_db_has_error($connection, $table, $queryString)) {
+    if (_storage_db_has_error($connection, $table, $queryString)) {
         return [];
     }
     
-    return mysqli_fetch_assoc($res);
+    $data = [];
+    
+    while ($row = mysqli_fetch_assoc($result)) {
+        if ($fetchAssocPrimaryKey && isset($row[$fetchAssocPrimaryKey])) {
+            $data[$row[$fetchAssocPrimaryKey]] = $row;    
+        } else {
+            $data[] = $row;
+        }
+    }
+    
+    return $data;
 }
 
-function core_storage_db_get_row_one($table, $cols, $where, $cond = [])
+function storage_db_get_row($table, $cols, $where, $cond = [])
 {
-    $result = core_storage_db_get_row($table, $cols, $where, [
+    $result = storage_db_get_rows($table, $cols, $where, [
         'LIMIT' => 1,
     ]);
     
     return $result ? $result[0] : $result;
 }
 
-function core_storage_db_get_value($table, $col, $where, $cond = [])
+function storage_db_get_value($table, $col, $where, $cond = [])
 {
-    $result = core_storage_db_get_row($table, $col, $where, [
+    $result = storage_db_get_rows($table, $col, $where, [
         'LIMIT' => 1,
     ]);
     
-    return $result ? $result[$col] : $result;
+    return $result ? $result[0][$col] : $result;
 }
 
-function core_storage_db_get_last_error($table)
+function storage_db_get_last_error($table)
 {
-    $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
+    $connection = _storage_db_get_connection(_storage_db_get_part($table));
     
     return $connection->error ? $connection->error . ' #' . $connection->errno : null;
 }
 
-function core_storage_db_insert_row($table, $bind, $ignore = false)
+
+function storage_db_insert_row($table, $bind, $ignore = false)
 {
-    $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
+    $connection = _storage_db_get_connection(_storage_db_get_part($table));
     
     if (!$connection) {
         trigger_error('Lost connection from db', E_USER_WARNING);
@@ -139,25 +151,25 @@ function core_storage_db_insert_row($table, $bind, $ignore = false)
         return false;
     }
     
-    list ($colsNames, $values) = _core_storage_db_prepare_insert_row($connection, $bind);
+    list ($colsNames, $values) = _storage_db_prepare_insert_row($connection, $bind);
     
     $queryString = 'INSERT ' . ($ignore ? 'IGNORE' : '') . ' INTO ' . $table . ' (' . implode(', ',
             $colsNames) . ') ' . ' VALUES (' . implode(',', $values) . ')';
     
     $res = mysqli_query($connection, $queryString);
     
-    if (_core_storage_db_has_error($connection, $table, $queryString)) {
+    if (_storage_db_has_error($connection, $table, $queryString)) {
         return false;
     }
     
     $lastInsertId = mysqli_insert_id($connection);
     
-    return $lastInsertId !== 0 ? $lastInsertId : $res;
+    return $lastInsertId !== 0 ? $lastInsertId : $res->num_rows;
 }
 
-function core_storage_db_set($table, $bind)
+function storage_db_set($table, $bind)
 {
-    $connection = _core_storage_db_get_connection(_core_storage_get_db($table));
+    $connection = _storage_db_get_connection(_storage_db_get_part($table));
     
     if (!$connection) {
         trigger_error('Lost connection from db', E_USER_WARNING);
@@ -165,7 +177,7 @@ function core_storage_db_set($table, $bind)
         return false;
     }
     
-    list ($colsNames, $values) = _core_storage_db_prepare_insert_row($connection, $bind);
+    list ($colsNames, $values) = _storage_db_prepare_insert_row($connection, $bind);
     
     $duplicateString = [];
     
@@ -178,7 +190,7 @@ function core_storage_db_set($table, $bind)
     
     $res = mysqli_query($connection, $queryString);
     
-    if (_core_storage_db_has_error($connection, $table, $queryString)) {
+    if (_storage_db_has_error($connection, $table, $queryString)) {
         return false;
     }
     
@@ -187,51 +199,101 @@ function core_storage_db_set($table, $bind)
     return $lastInsertId !== 0 ? $lastInsertId : $res;
 }
 
-function core_storage_db_transaction_begin($table)
+function storage_db_transaction_begin($table)
 {
-    global $_core_storage_db_started_transactions;
+    global $_storage_db_started_transactions;
     
-    $part = _core_storage_get_db($table);
+    $part = _storage_db_get_part($table);
     
     // transaction already started
-    if (isset($_core_storage_db_started_transactions[$part])) {
+    if (isset($_storage_db_started_transactions[$part])) {
+        $_storage_db_started_transactions[$part][$table] = $table; 
         return true;
     }
     
-    $part       = _core_storage_get_db($table);
-    $connection = _core_storage_db_get_connection($part);
+    $part       = _storage_db_get_part($table);
+    $connection = _storage_db_get_connection($part);
     
     $res = mysqli_begin_transaction($connection);
     
-    if (_core_storage_db_has_error($connection, $table)) {
+    if (_storage_db_has_error($connection, $table)) {
         return false;
     }
     
     if (!$res) {
         trigger_error('cant start transaction on part: ' . $part . ' for table ' . $table);
-        
         return false;
     }
     
-    $_core_storage_db_started_transactions[$part] = $connection;
+    $_storage_db_started_transactions[$part][$table] = $table;
     
     lets_use('core_shutdown');
-    core_shutdown_add_check('db_transactions_end_check', 'core_storage_db_transactions_end_check', false);
+    core_shutdown_add_check('db_transactions_end_check', 'storage_db_transactions_end_check', false);
     
     return $res;
 }
 
-function core_storage_db_transactions_commit_all()
+function storage_db_transaction_commit($tables)
 {
-    global $_core_storage_db_started_transactions;
+    $tables = (array)$tables;
     
-    if (!$_core_storage_db_started_transactions) {
+    global $_storage_db_started_transactions;
+    $tablesByParts = [];
+    
+    foreach ($tables as $table) {
+        $tablesByParts[_storage_db_get_part($table)][$table] = $table;
+    }
+    
+    foreach ($tablesByParts as $part => $tables) {
+        if (array_diff_key($_storage_db_started_transactions[$part], $tables)) {
+            core_error('tring to commit transaction with incorrect tables passed'. json_encode([$part, $tables, $_storage_db_started_transactions[$part]]));
+            return false;
+        }
+        
+        $connection = _storage_db_get_connection($part);
+        
+        if (!mysqli_commit($connection)) {
+            mysqli_rollback($connection);
+            core_error('fail commit transaction on part: ' . $part);
+            return false;
+        }
+    }
+}
+
+function storage_db_transaction_rollback($tables)
+{
+    $tables = (array)$tables;
+    
+    global $_storage_db_started_transactions;
+    $tablesByParts = [];
+    
+    foreach ($tables as $table) {
+        $tablesByParts[_storage_db_get_part($table)][$table] = $table;
+    }
+    
+    foreach ($tablesByParts as $part => $tables) {
+        if (array_diff_key($_storage_db_started_transactions[$part], $tables)) {
+            core_error('tring to rollback transaction with incorrect tables passed'. json_encode([$part, $tables, $_storage_db_started_transactions[$part]]));
+            return false;
+        }
+        
+        $connection = _storage_db_get_connection($part);
+        
+        mysqli_rollback($connection);
+    }
+}
+
+function storage_db_transactions_commit_all()
+{
+    global $_storage_db_started_transactions;
+    
+    if (!$_storage_db_started_transactions) {
         core_log(__FUNCTION__ . ' called but no started transactions');
         
         return true;
     }
     
-    foreach ($_core_storage_db_started_transactions as $part => $connection) {
+    foreach ($_storage_db_started_transactions as $part => $connection) {
         if (!mysqli_commit($connection)) {
             core_error('fail commit transaction on part: ' . $part);
             
@@ -242,11 +304,11 @@ function core_storage_db_transactions_commit_all()
     return true;
 }
 
-function core_storage_db_transactions_rollback_all()
+function storage_db_transactions_rollback_all()
 {
-    global $_core_storage_db_started_transactions;
+    global $_storage_db_started_transactions;
     
-    if (!$_core_storage_db_started_transactions) {
+    if (!$_storage_db_started_transactions) {
         core_log(__FUNCTION__ . ' called but no started transactions');
         
         return true;
@@ -254,7 +316,7 @@ function core_storage_db_transactions_rollback_all()
     
     $allResult = true;
     
-    foreach ($_core_storage_db_started_transactions as $part => $connection) {
+    foreach ($_storage_db_started_transactions as $part => $connection) {
         $res = mysqli_rollback($connection);
         if (!$res) {
             core_error('fail rollback transaction on part: ' . $part);
@@ -265,15 +327,15 @@ function core_storage_db_transactions_rollback_all()
     return $allResult;
 }
 
-function core_storage_db_transactions_end_check()
+function storage_db_transactions_end_check()
 {
-    global $_core_storage_db_started_transactions;
-    if (!empty($_core_storage_db_started_transactions)) {
+    global $_storage_db_started_transactions;
+    if (!empty($_storage_db_started_transactions)) {
         core_error('not ended transactions found on shutdown');
     }
 }
 
-function _core_storage_db_prepare_insert_row($connection, $insertBind)
+function _storage_db_prepare_insert_row($connection, $insertBind)
 {
     $values = $colsNames = [];
     
@@ -296,7 +358,7 @@ function _core_storage_db_prepare_insert_row($connection, $insertBind)
     return [$colsNames, $values];
 }
 
-function _core_storage_db_build_where($connection, $where)
+function _storage_db_build_where($connection, $where)
 {
     if (!isset($where[0])) {
         core_error('incorrect where bind: ' . json_encode($where), __FUNCTION__);
@@ -344,7 +406,7 @@ function _core_storage_db_build_where($connection, $where)
     return trim($whereString);
 }
 
-function _core_storage_get_db($table)
+function _storage_db_get_part($table)
 {
     static $cache;
     

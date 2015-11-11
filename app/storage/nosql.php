@@ -1,13 +1,13 @@
 <?php
 
-lets_sure_loaded('core_storage_nosql');
+lets_sure_loaded('storage_nosql');
 
 /**
  * @param $redisId
  *
  * @return Redis|bool
  */
-function _core_storage_nosql_connect ($redisId) {
+function _storage_nosql_connect ($redisId) {
     static $allConnectionsConfig;
     static $connections;
     
@@ -43,8 +43,8 @@ function _core_storage_nosql_connect ($redisId) {
 }
 
 
-function core_storage_nosql_get($redisId, $key) {
-    $connect = _core_storage_nosql_connect($redisId);
+function storage_nosql_get($redisId, $key) {
+    $connect = _storage_nosql_connect($redisId);
     if (!$connect) {
         core_error('Missing connection to redis on '.__FUNCTION__);
         return null; 
@@ -53,8 +53,8 @@ function core_storage_nosql_get($redisId, $key) {
     return $connect->get($key);
 }
 
-function core_storage_nosql_set($redisId, $key, $value) {
-    $connect = _core_storage_nosql_connect($redisId);
+function storage_nosql_set($redisId, $key, $value) {
+    $connect = _storage_nosql_connect($redisId);
     if (!$connect) {
         core_error('Missing connection to redis on '.__FUNCTION__);
         return null;
@@ -67,8 +67,8 @@ function core_storage_nosql_set($redisId, $key, $value) {
     return $connect->set($key, $value);
 }
 
-function core_storage_nosql_setnx($redisId, $key, $value, $expire) {
-    $connect = _core_storage_nosql_connect($redisId);
+function storage_nosql_setnx($redisId, $key, $value, $expire) {
+    $connect = _storage_nosql_connect($redisId);
     
     if (!$connect) {
         core_error('Missing connection to redis on '.__FUNCTION__);
@@ -84,8 +84,8 @@ function core_storage_nosql_setnx($redisId, $key, $value, $expire) {
     return $res;
 }
 
-function core_storage_nosql_get_prefix($redisId, $prefix, $key) {
-    $connect = _core_storage_nosql_connect($redisId);
+function storage_nosql_get_prefix($redisId, $prefix, $key) {
+    $connect = _storage_nosql_connect($redisId);
     if (!$connect) {
         core_error('Missing connection to redis on '.__FUNCTION__);
         return null;
@@ -94,8 +94,8 @@ function core_storage_nosql_get_prefix($redisId, $prefix, $key) {
     return $connect->hGet($prefix, $key);
 }
 
-function core_storage_nosql_set_prefix($redisId, $prefix, $key, $value) {
-    $connect = _core_storage_nosql_connect($redisId);
+function storage_nosql_set_prefix($redisId, $prefix, $key, $value) {
+    $connect = _storage_nosql_connect($redisId);
     
     if (!$connect) {
         core_error('Missing connection to redis on '.__FUNCTION__);

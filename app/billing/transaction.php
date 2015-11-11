@@ -14,7 +14,8 @@ const BILLING_TRANSACTION_FIELD_STARTED    = 'started';
 const BILLING_TRANSACTION_FIELD_STATUS     = 'status';
 
 const BILLING_TRANSACTION_STATUS_STARTED = 1;
-const BILLING_TRANSACTION_STATUS_ENDED   = 2;
+const BILLING_TRANSACTION_STATUS_SUCCESS = 2;
+const BILLING_TRANSACTION_STATUS_ERROR   = 3;
 
 function billing_transaction_register($accountFrom, $accountTo, $sum, $type = 0, $relatedId = 0)
 {
@@ -34,13 +35,23 @@ function billing_transaction_register($accountFrom, $accountTo, $sum, $type = 0,
 }
 
 
-function billing_transaction_end($transactionId)
+function billing_transaction_success($transactionId)
+{
+    return billing_transaction_update_status($transactionId, BILLING_TRANSACTION_STATUS_SUCCESS);
+}
+
+function billing_transaction_fail($transactionId)
+{
+    return billing_transaction_update_status($transactionId, BILLING_TRANSACTION_STATUS_ERROR);
+}
+
+function billing_transaction_update_status($transactionId, $status)
 {
     lets_use('storage_db');
     
     $transactionId = storage_db_set(BILLING_TRANSACTION_DB_TABLE, [
         BILLING_TRANSACTION_FIELD_ID     => $transactionId,
-        BILLING_TRANSACTION_FIELD_STATUS => BILLING_TRANSACTION_STATUS_ENDED,
+        BILLING_TRANSACTION_FIELD_STATUS => BILLING_TRANSACTION_STATUS_SUCCESS,
     ]);
     
     return $transactionId;

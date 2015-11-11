@@ -45,6 +45,7 @@ function core_config_load () {
                     'users',
                     'balance',
                     'transactions',
+                    'accounts',
                 ],
             ],
         ];    
