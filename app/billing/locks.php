@@ -4,7 +4,7 @@ lets_sure_loaded('billing_locks');
 
 global $_billing_locks_locked_by_transaction;
 
-function billing_locks_lock_transaction($transactionId, $account1, $account2) {
+function billing_locks_lock_transaction($transactionId, $accountsIds) {
     global $_billing_locks_locked_by_transaction;
     
     if (isset($_billing_locks_locked_by_transaction[$transactionId])) {
@@ -12,21 +12,18 @@ function billing_locks_lock_transaction($transactionId, $account1, $account2) {
         return false;
     }
     
-    $lock1 = _billing_locks_lock($transactionId, $account1);
-    if (!$lock1) {
-        return false;
-    }
+    $_billing_locks_locked_by_transaction[$transactionId] = [];
     
-    $lock2 = _billing_locks_lock($transactionId, $account2);
-    if (!$lock2) {
-        _billing_locks_unlock($account1);
-        return false;
-    }
+    foreach ($accountsIds as $accountId) {
+        $lock = _billing_locks_lock($transactionId, $accountId);
+        
+        if (!$lock) {
+            billing_locks_unlock_transaction($transactionId);
+            return false;
+        }
     
-    $_billing_locks_locked_by_transaction[$transactionId] = [
-        $account1,
-        $account2
-    ];
+        $_billing_locks_locked_by_transaction[$transactionId][] = $accountId;
+    }
     
     return true;    
 }
