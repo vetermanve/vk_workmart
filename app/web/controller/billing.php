@@ -45,7 +45,9 @@ function web_controller_billing_refill() {
     
     $trId = billing_transaction_register($accountFrom, $accountTo, $sum);
     if (!$trId) {
+        // cant register transaction
         billing_transaction_fail($trId);
+        
         web_router_render_page('billing', 'refill', [
             'result' => false,
             'msg' => 'Ошибка сервера, повторите позже.',
@@ -54,8 +56,10 @@ function web_controller_billing_refill() {
     }
     
     $lockRes = billing_locks_lock_transaction($trId, [$accountFrom, $accountTo]);
-    if ($lockRes) {
+    if (!$lockRes) {
+        // cant lock transaction
         billing_transaction_fail($trId);
+        
         web_router_render_page('billing', 'refill', [
             'result' => false,
             'msg' => 'В данный момент операция невозможна, повторите позже',
@@ -65,7 +69,10 @@ function web_controller_billing_refill() {
     
     $movementPossible = billing_balance_check_sum_available($accountFrom, $sum);
     if (!$movementPossible) {
+        // not enough money
         billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
         web_router_render_page('billing', 'refill', [
             'result' => false,
             'msg' => 'На исходящем счете недостаточно денег',
@@ -75,7 +82,10 @@ function web_controller_billing_refill() {
     
     $dbTransactionLock = billing_balance_storage_transaction_start();
     if(!$dbTransactionLock) {
+        // cant begin db transaction
         billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
         web_router_render_page('billing', 'refill', [
             'result' => false,
             'msg' => 'Не удалось начать транзакцию',
@@ -88,6 +98,8 @@ function web_controller_billing_refill() {
         // cant move money
         billing_balance_storage_transaction_rollback();
         billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
         web_router_render_page('billing', 'refill', [
             'result' => false,
             'msg' => 'Не удалось перевести деньги',
@@ -97,7 +109,10 @@ function web_controller_billing_refill() {
     
     $transactionCommit = billing_balance_storage_transaction_commit();
     if ($transactionCommit) {
+        // cant commit db transaction
         billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
         web_router_render_page('billing', 'refill', [
             'result' => false,
             'msg' => 'Не удалось завершить транзакцию',
@@ -106,9 +121,13 @@ function web_controller_billing_refill() {
     }
     
     billing_transaction_success($trId);
+    billing_locks_unlock_transaction($trId);
+    
+    $moneyNow = billing_balance_get_account_amount($accountTo);
+    
     web_router_render_page('billing', 'refill', [
         'result' => true,
-        'msg' => $sum.' денежных единиц успешно переведены вам на счет',
+        'msg' => $sum.' денежных единиц успешно переведены вам на счет. На вашем счету теперь: '.$moneyNow,
     ]);
 }
 

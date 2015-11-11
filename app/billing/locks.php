@@ -18,6 +18,7 @@ function billing_locks_lock_transaction($transactionId, $accountsIds) {
         $lock = _billing_locks_lock($transactionId, $accountId);
         
         if (!$lock) {
+            core_error('cant get lock on account:'.$accountId, __FUNCTION__);
             billing_locks_unlock_transaction($transactionId);
             return false;
         }
@@ -51,7 +52,7 @@ function _billing_locks_lock($transaction, $accountId, $retry = 3, $lockTime = 6
     
     $lockId = _billing_locks_get_lock_key($accountId);
     
-    while (--$retry <= 0 ) {
+    while (--$retry >= 0 ) {
         if (storage_lock_get($lockId, $lockTime, $transaction)) {
            return true; 
         }

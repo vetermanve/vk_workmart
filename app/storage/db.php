@@ -58,9 +58,9 @@ function _storage_db_get_connection($dbPart)
  *
  * @return bool
  */
-function _storage_db_has_error($connection, $table, $query = '')
+function _storage_db_check($connection, $table, $query = '')
 {
-    core_dump($query);
+    core_log($query, __FUNCTION__);
     if ($connection->error) {
         trigger_error($connection->error . ' in table: ' . $table.' on query: '.$query);
         
@@ -98,7 +98,7 @@ function storage_db_get_rows($table, $cols, $where, $cond = [], $fetchAssocPrima
     
     $result = mysqli_query($connection, $queryString);
     
-    if (_storage_db_has_error($connection, $table, $queryString)) {
+    if (_storage_db_check($connection, $table, $queryString)) {
         return [];
     }
     
@@ -158,7 +158,7 @@ function storage_db_insert_row($table, $bind, $ignore = false)
     
     $res = mysqli_query($connection, $queryString);
     
-    if (_storage_db_has_error($connection, $table, $queryString)) {
+    if (_storage_db_check($connection, $table, $queryString)) {
         return false;
     }
     
@@ -190,7 +190,7 @@ function storage_db_set($table, $bind)
     
     $res = mysqli_query($connection, $queryString);
     
-    if (_storage_db_has_error($connection, $table, $queryString)) {
+    if (_storage_db_check($connection, $table, $queryString)) {
         return false;
     }
     
@@ -216,7 +216,7 @@ function storage_db_transaction_begin($table)
     
     $res = mysqli_begin_transaction($connection);
     
-    if (_storage_db_has_error($connection, $table)) {
+    if (_storage_db_check($connection, $table, 'TRANSACTION BEGIN:'.$part)) {
         return false;
     }
     
@@ -251,9 +251,16 @@ function storage_db_transaction_commit($tables)
         }
         
         $connection = _storage_db_get_connection($part);
+    
+        $commitRes = mysqli_commit($connection);
         
-        if (!mysqli_commit($connection)) {
+        _storage_db_check($connection, json_encode(array_values($tables)), 'TRANSACTION COMMIT:'.$part);
+        
+        if (!$commitRes) {
             mysqli_rollback($connection);
+            
+            _storage_db_check($connection, json_encode(array_values($tables)), 'TRANSACTION ROLLBACK:'.$part);
+            
             core_error('fail commit transaction on part: ' . $part);
             return false;
         }
@@ -278,8 +285,10 @@ function storage_db_transaction_rollback($tables)
         }
         
         $connection = _storage_db_get_connection($part);
-        
+    
         mysqli_rollback($connection);
+        
+        _storage_db_check($connection, json_encode(array_values($tables)), 'TRANSACTION ROLLBACK:'.$part);
     }
 }
 

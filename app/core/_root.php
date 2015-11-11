@@ -33,11 +33,9 @@ function core_has_log() {
 
 function core_dump($data, $data2 = null) {
     ob_start();
-    echo '<pre>';
     foreach (func_get_args() as $val) {
         var_dump($val);    
     }
-    echo '</pre>';
     core_log(ob_get_clean());
 }
 

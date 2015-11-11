@@ -50,6 +50,8 @@ function storage_nosql_get($redisId, $key) {
         return null; 
     }
     
+    core_log('REDIS GET: '.$key, __FUNCTION__);
+    
     return $connect->get($key);
 }
 
@@ -61,8 +63,12 @@ function storage_nosql_set($redisId, $key, $value) {
     }
     
     if ($value === null) {
+        core_log('REDIS DEL: '.$key, __FUNCTION__);
+        
         return $connect->del($key);
     }
+    
+    core_log('REDIS SET: '.$key.' = '.$value, __FUNCTION__);
     
     return $connect->set($key, $value);
 }
@@ -77,8 +83,12 @@ function storage_nosql_setnx($redisId, $key, $value, $expire) {
     
     $res = $connect->setnx($key, $value);
     
+    core_log('REDIS SETNX: '.$key.' = '.$value.'; res: '.json_encode($res), __FUNCTION__);
+    
     if ($res) {
-       $connect->expire($key, $expire); 
+       $connect->expire($key, $expire);
+        
+        core_log('REDIS EXPIRE: '.$key.' TTL '.$expire, __FUNCTION__);
     }
     
     return $res;
@@ -90,6 +100,8 @@ function storage_nosql_get_prefix($redisId, $prefix, $key) {
         core_error('Missing connection to redis on '.__FUNCTION__);
         return null;
     }
+    
+    core_log('REDIS GET PREFIX: '.$prefix.'::'.$key, __FUNCTION__);
     
     return $connect->hGet($prefix, $key);
 }
@@ -103,8 +115,11 @@ function storage_nosql_set_prefix($redisId, $prefix, $key, $value) {
     }
     
     if ($value === null) {
+        core_log('REDIS DEL PREFIX: '.$prefix.'::'.$key, __FUNCTION__);
         return $connect->hDel($prefix, $key);
     }
+    
+    core_log('REDIS SET PREFIX: '.$prefix.'::'.$key.' = '.$value, __FUNCTION__);
     
     return $connect->hSet($prefix, $key, $value);
 }

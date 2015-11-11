@@ -58,10 +58,10 @@
         <div class="content pure-u-1 pure-u-md-3-4">
             <?=$content?>
             <? if(core_has_log()): ?>
-                <div style="font-size: 83%">
+                <div >
                     <h2>System Logs</h2>
                     <? foreach (core_get_log() as $str): ?>
-                        <div><?=$str?></div> 
+                        <div style="white-space: pre-wrap; font-family: monospace; padding: 0.3em"><?=$str?></div> 
                     <? endforeach; ?>
                 </div>
             <? endif; ?>
