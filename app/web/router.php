@@ -17,13 +17,17 @@ function web_router_route($uri, $get, $post) {
     
     $pathInfo = explode('/', trim($uri, '/'));
     
-    $controller = !empty($pathInfo[0]) ? $pathInfo[0] : 'index';
-    $action     = !empty($pathInfo[1]) ? $pathInfo[1] : 'index';
+    $controllerPart = !empty($pathInfo[0]) ? $pathInfo[0] : 'index';
+    $actionPart     = !empty($pathInfo[1]) ? $pathInfo[1] : 'index';
     
-    $controllerName = str_replace(['_', '/', ' '], '', $controller);
-    $actionName     = str_replace(['_', '/', ' '], '', $action);
+    $controller = str_replace(['_', '/', ' '], '', $controllerPart);
+    $action     = str_replace(['_', '/', ' '], '', $actionPart);
     
-    $module = 'web_controller_'.$controllerName;
+    web_router_call($controller, $action, $uri);
+}
+
+function web_router_call($controller, $action, $uri) {
+    $module = 'web_controller_'.$controller;
     lets_use($module);
     
     // pre dispatch
@@ -33,13 +37,13 @@ function web_router_route($uri, $get, $post) {
         try {
             $function();
         } catch (Exception $e) {
-            web_router_error('');
+            web_router_error($e->getMessage()); // @todo show error only in debug
             return ;
         }
     }
     
     // dispatch
-    $function = $module.'_'.$actionName;
+    $function = $module.'_'.$action;
     
     if (!function_exists($function)) {
         web_router_notfound($uri);
@@ -47,7 +51,7 @@ function web_router_route($uri, $get, $post) {
     }
     
     try {
-        $function();    
+        $function();
     } catch (Exception $e) {
         web_router_error('');
         return ;
@@ -60,7 +64,7 @@ function web_router_get_param($key, $default = null) {
     return isset($_web_router_request_data[$key]) ? $_web_router_request_data[$key] : $default; 
 }
 
-function web_router_notfound ($uri) {
+function web_router_notfound ($uri = '') {
     web_response_set_http_code(404);
     web_response_set_content_type('text/html');
     web_response_set_body(web_render_page_content('error', 'notFound', ['uri' => $uri]));
@@ -83,4 +87,8 @@ function web_router_render_page($module, $template, $data = [], $layout = 'main'
 
 function web_router_redirect ($location) {
     web_response_redirect($location);
+}
+
+function web_router_get_method () {
+    return isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 }

@@ -9,5 +9,12 @@ function web_controller_index_precall () {
 }
 
 function web_controller_index_index () {
+    lets_use('user_self');
+    
+    if (user_self_id()) {
+        web_router_call('order','list', '');
+        return;
+    }
+    
     web_router_render_page('index', 'index'); 
 }

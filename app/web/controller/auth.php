@@ -45,8 +45,6 @@ function web_controller_auth_auth () {
 }
 
 function web_controller_auth_register () {
-    lets_use('core_storage_db');
-    
     $email = web_router_get_param('email');
     
     if (!$email) {

@@ -2,60 +2,100 @@
 
 lets_sure_loaded('web_controller_order');
 
-function web_controller_order_list () {
+function web_controller_order_precall()
+{
+    lets_use('user_self');
     
-    $authors = [
-        '1' => [
-            'name' => 'Михаил Денисов',
-        ],
-        '2' => [
-            'name' => 'Мухамед Ахметов',
-        ],
-    ];
+    web_render_add_data('is_auth', user_self_id());
+}
+
+function web_controller_order_create()
+{
+    lets_use('user_self');
+    $curUserId = user_self_id();
     
-    $posts = [[
-        'author_id' => 1,
-        'title' => 'Мне нужно сделать тестовое задание для VK',
-        'desc' => 'Тестовое задание VK. Система заказов
-
-Описание:
-Нужно написать упрощенную систему выполнения абстрактных заказов.
-
-Есть заказчики, исполнители и система.
-Заказчик публикует заказ, указывает его стоимость.
-Исполнитель видит ленту заказов, доступных для исполнения.
-Исполнитель кликает "выполнить" на заказе, ему на счет зачисляется сумма за вычетом комиссии системы.
-У одного заказа может быть только один исполнитель. Когда заказ выполнен - он исчезает из ленты. 
-
-Техника:
-PHP (без ООП), mysql, клиентская сторона на усмотрение. Проект должен быть на гитхабе и отражать процесс разработки.
-
-Код максимально приближенный к боевому, в частности предусмотреть вариант, когда каждая таблица располагается в отдельной базе данных.
-
-Клиентская сторона максимально "аджаксифицирована" и поприятнее.
-
-В результате — ссылка на гитхаб и развёрнутое демо.
-
-Сроки на ваше усмотрение
-
-Мы смотрим на безопасность кода, основательность подхода, целостность данных, расчет на нагрузку 
-',
-    ],
-    [
-        'author_id' => 2,
-        'title' => 'Мне нужно разгразит вагон помидоров',
-        'desc' => 'Вагон стоит на ладожском вокзале. 
-        Работать нужно будет ночью,
-        Оплата по факту.
+    if (!$curUserId) {
+        web_router_redirect('/auth/auth');
+        return ;
+    }
+    
+    if (web_router_get_method() === 'POST') {
+        $cost = web_router_get_param('cost');
         
-        Звонить по телефону +7 899 964 12 32
-        ',
-    ]
-    ];
+        if (!$cost) {
+            web_router_render_page('order', 'create', [
+                'msg'   => 'Цена должна быть задана',
+                'error' => 'cost',
+            ]);
+            
+            return;
+        }
+        
+        $title = web_router_get_param('title');
     
+        if (!$title) {
+            web_router_render_page('order', 'create', ['msg'   => 'Название должно быть задано', 'error' => 'title',]);
+            return;
+        }
+    
+        $desc = web_router_get_param('desc');
+    
+        if (!$desc) {
+            web_router_render_page('order', 'create', ['msg'   => 'Описание должно быть задано', 'error' => 'desc',]);
+            return;
+        }
+        
+        lets_use('order_storage');
+        
+        $res = order_storage_add_order($title, $desc, $curUserId, $cost);
+        
+        if (!$res) {
+            web_router_render_page('order', 'create', ['msg'   => 'Не удалось сохранить заказ', 'error' => 'core',]);
+            return;
+        }
+        
+        web_router_redirect('/order/list');
+    }
+    
+    web_router_render_page('order', 'create');
+}
+
+function web_controller_order_list()
+{
+    lets_use('storage_db', 'order_storage');
+    
+    $posts = order_storage_get_list();
+    
+    $authors = [];
+    
+    if ($posts) {
+        $authors = storage_db_get_rows('users', '*', [
+            ['id' , array_unique(array_column($posts, 'author_id'))],
+        ], [], 'id');
+    }
     
     web_router_render_page('order', 'list', [
-        'posts' => $posts,
+        'posts'   => $posts,
+        'authors' => $authors,
+    ]);
+}
+
+function web_controller_order_mine()
+{
+    lets_use('storage_db', 'order_storage');
+    
+    $posts = order_storage_get_list();
+    
+    $authors = [];
+    
+    if ($posts) {
+        $authors = storage_db_get_rows('users', '*', [
+            ['id' , array_unique(array_column($posts, 'author_id'))],
+        ], [], 'id');
+    }
+    
+    web_router_render_page('order', 'list', [
+        'posts'   => $posts,
         'authors' => $authors,
     ]);
 }
