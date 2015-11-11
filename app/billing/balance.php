@@ -59,7 +59,7 @@ function billing_balance_process_move ($accountFrom, $accountTo, $sum, $trId) {
     $incomingFromAccountAmount = billing_balance_get_account_amount($accountFrom);
     $incomingToAccountAmount = billing_balance_get_account_amount($accountTo);
     
-    $accountFromUpdate = billing_balance_set_account_amount($accountFrom, $incomingFromAccountAmount + $sum);
+    $accountFromUpdate = billing_balance_set_account_amount($accountFrom, $incomingFromAccountAmount - $sum);
     if (!$accountFromUpdate) {
         return false;
     }
