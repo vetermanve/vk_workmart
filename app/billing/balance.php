@@ -69,7 +69,7 @@ function billing_balance_process_move ($accountFrom, $accountTo, $sum, $trId) {
         return false;
     }
     
-    return $accountFromUpdate;
+    return true;
 }
 
 function _billing_balance_pack_money($amount)
