@@ -2,17 +2,17 @@
 
 lets_sure_loaded('billing_locks');
 
-global $_billing_locks_locked_by_transaction;
+global $_billing_locks_by_transaction;
 
 function billing_locks_lock_transaction($transactionId, $accountsIds) {
-    global $_billing_locks_locked_by_transaction;
+    global $_billing_locks_by_transaction;
     
-    if (isset($_billing_locks_locked_by_transaction[$transactionId])) {
+    if (isset($_billing_locks_by_transaction[$transactionId])) {
         core_error('trying to re-lock non-empty transaction');
         return false;
     }
     
-    $_billing_locks_locked_by_transaction[$transactionId] = [];
+    $_billing_locks_by_transaction[$transactionId] = [];
     
     foreach ($accountsIds as $accountId) {
         $lock = _billing_locks_lock($transactionId, $accountId);
@@ -22,7 +22,7 @@ function billing_locks_lock_transaction($transactionId, $accountsIds) {
             return false;
         }
     
-        $_billing_locks_locked_by_transaction[$transactionId][] = $accountId;
+        $_billing_locks_by_transaction[$transactionId][] = $accountId;
     }
     
     return true;    
@@ -30,13 +30,13 @@ function billing_locks_lock_transaction($transactionId, $accountsIds) {
 
 function billing_locks_unlock_transaction($transactionId)
 {
-    global $_billing_locks_locked_by_transaction;
+    global $_billing_locks_by_transaction;
     
-    foreach ($_billing_locks_locked_by_transaction[$transactionId] as $accountId) {
+    foreach ($_billing_locks_by_transaction[$transactionId] as $accountId) {
         _billing_locks_unlock($accountId);
     }
     
-    unset ($_billing_locks_locked_by_transaction[$transactionId]);
+    unset ($_billing_locks_by_transaction[$transactionId]);
 }
 
 
