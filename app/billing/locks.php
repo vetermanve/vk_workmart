@@ -47,12 +47,12 @@ function _billing_locks_get_lock_key($accountId)
 
 function _billing_locks_lock($transaction, $accountId, $retry = 3, $lockTime = 60)
 {
-    lets_use('core_storage_lock');
+    lets_use('storage_lock');
     
     $lockId = _billing_locks_get_lock_key($accountId);
     
     while (--$retry <= 0 ) {
-        if (core_storage_lock_get($lockId, $lockTime, $transaction)) {
+        if (storage_lock_get($lockId, $lockTime, $transaction)) {
            return true; 
         }
         usleep(mt_rand(1, 200));
@@ -64,10 +64,10 @@ function _billing_locks_lock($transaction, $accountId, $retry = 3, $lockTime = 6
 
 function _billing_locks_unlock($accountId)
 {
-    lets_use('core_storage_lock');
+    lets_use('storage_lock');
     
     $lockId = _billing_locks_get_lock_key($accountId);
     
-    return core_storage_lock_release($lockId);
+    return storage_lock_release($lockId);
 }
 
