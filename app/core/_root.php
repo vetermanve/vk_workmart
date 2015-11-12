@@ -3,11 +3,16 @@
 lets_sure_loaded('core');
 
 global $_core_internal_log;
+global $_core_start_time;
 
 $_core_internal_log = [];
 
 function core_init($appRole) {
+    global $_core_start_time;
+    $_core_start_time = microtime(1);
+    
     lets_use('core_config');
+    
     core_config_load();
 }
 
@@ -22,7 +27,13 @@ function core_log($sting, $function = '') {
 
 function core_get_log() {
     global $_core_internal_log;
+    
     return $_core_internal_log;
+}
+
+function core_log_work_time() {
+    global $_core_start_time;
+    core_log('WORK TIME '.round(microtime(1) - $_core_start_time, 3), __FUNCTION__);
 }
 
 function core_has_log() {

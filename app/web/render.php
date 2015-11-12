@@ -42,6 +42,7 @@ function web_render_page_content($module, $template, $data = [], $layout = 'main
     $templateFile = __DIR__.'/templates/'.$module.'/'.$template.'.phtml';
     $layoutFile = __DIR__.'/templates/layouts/'.$layout.'.phtml';
     
+    /* check templates exists */
     if (!file_exists($templateFile)) {
         core_error('tpl file: '.$templateFile.' not found');
         return '';
@@ -52,15 +53,22 @@ function web_render_page_content($module, $template, $data = [], $layout = 'main
         return '';
     }
     
+    /* write scope data to global var to access via _v */
     $_web_render_scope_params = $data;
     
-    ob_start();
-    
+    /* extract vars to straight access */
     extract((array)$_web_render_global_params);
     extract((array)$data);
     
+    /* render page content */
+    ob_start();
     require $templateFile;
     $content = ob_get_clean();
+    
+    /* write page work time */
+    core_log_work_time();
+    
+    /* render layout */
     ob_start();
     require $layoutFile;
     $result = ob_get_clean();

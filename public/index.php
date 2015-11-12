@@ -5,9 +5,9 @@ chdir('..');
 error_reporting(1);
 ini_set("display_errors", 1);
 
-require_once 'autoload.php';
+require_once 'letsload.php';
 
-lets_use('core', 'core_config', 'web_router', 'web_render'); 
+lets_use('core', 'web_router'); 
 
 core_init('web');
 

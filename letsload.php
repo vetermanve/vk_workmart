@@ -1,8 +1,9 @@
 <?php
 
-global $_letsLoadCache;
+global $_lets_load_recheck;
+global $_lets_load_lock;
 
-$_letsLoadCache = [];
+$_lets_load_recheck = [];
 
 register_shutdown_function(function () {
     $error = error_get_last();
@@ -13,12 +14,13 @@ register_shutdown_function(function () {
 
 // require-style autoloader
 function lets_use ($moduleName, $anotherModule = null) {
-    static $loadedModules;
-    global $_letsLoadCache;
+    global $_lets_load_lock;
+    global $_lets_load_recheck;
+    
     $modules = $anotherModule ? func_get_args() : [$moduleName];
     
     foreach ($modules as $module) {
-        if (!isset($loadedModules[$module])) {
+        if (!isset($_lets_load_lock[$module])) {
             
             if(strpos($module, '_')) {
                 $requiredFile =  'app/'.str_replace('_', '/', $module).'.php';    
@@ -34,18 +36,23 @@ function lets_use ($moduleName, $anotherModule = null) {
             $startLoadTime = microtime(1);
             require_once ($requiredFile);
             
-            if (!isset ($_letsLoadCache[$module])) {
+            if (!isset ($_lets_load_recheck[$module])) {
                 _lets_report_load_error('Required file not provide @lets_sure_loaded', $module, $requiredFile);    
             }
             
-            $loadedModules[$module] = microtime(1) - $startLoadTime;
+            $_lets_load_lock[$module] = microtime(1) - $startLoadTime;
         }
     }
 };
 
 function lets_sure_loaded($moduleName) {
-    global $_letsLoadCache;
-    $_letsLoadCache[$moduleName] = 1;
+    global $_lets_load_recheck;
+    $_lets_load_recheck[$moduleName] = 1;
+}
+
+function lets_load_get_stats() {
+    global $_lets_load_recheck;
+    return $_lets_load_recheck;
 }
 
 function _lets_report_load_error($error, $moduleName, $location) {
