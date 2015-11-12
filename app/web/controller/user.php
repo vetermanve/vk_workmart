@@ -13,12 +13,14 @@ function web_controller_user_index () {
 }
 
 function web_controller_user_profile () {
-    lets_use('user_self');
+    lets_use('user_self', 'billing_log');
     
     $balance = user_self_balance();
+    $transactions = billing_log_get_user_transactions(user_self_id());
     
     web_router_render_page('user', 'profile', [
         'balance' => $balance,
+        'transactions' => $transactions,
     ]);
 }
 

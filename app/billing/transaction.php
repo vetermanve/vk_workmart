@@ -17,6 +17,17 @@ const BILLING_TRANSACTION_STATUS_STARTED = 1;
 const BILLING_TRANSACTION_STATUS_SUCCESS = 2;
 const BILLING_TRANSACTION_STATUS_ERROR   = 3;
 
+/* [Блокировка средств] [100] [в счет] [залога заказа] [Нужно посторить дом]
+    [Возврат сресств] [из] [залога заказа] [Нужно посторить дом]
+    [Уплата] [в счет] [процентов по сделке] [Нужно посторить дом]
+    [Уплата] [в счет] [работ по ] [Нужно посторить дом]
+    [Ввод средств] [из] [источника] [Благотворительный фонд] */
+
+const BILLING_TRANSACTION_TYPE_LOCK   = 1;
+const BILLING_TRANSACTION_TYPE_UNLOCK = 2;
+const BILLING_TRANSACTION_TYPE_PAY    = 3;
+const BILLING_TRANSACTION_TYPE_REFILL = 4; 
+
 function billing_transaction_register($accountFrom, $accountTo, $sum, $type = 0, $relatedId = 0)
 {
     lets_use('storage_db');
@@ -55,4 +66,13 @@ function billing_transaction_update_status($transactionId, $status)
     ]);
     
     return $transactionId;
+}
+
+function billing_transaction_get_accounts_transactions($accounts) { 
+    lets_use('storage_db');
+    
+    return storage_db_get_rows(BILLING_TRANSACTION_DB_TABLE, '*', [
+        [BILLING_TRANSACTION_FIELD_ACC_FROM, $accounts],
+        [BILLING_TRANSACTION_FIELD_ACC_TO, $accounts],
+    ]);
 }

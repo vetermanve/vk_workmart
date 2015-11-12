@@ -391,6 +391,8 @@ function _storage_db_build_where($connection, $where)
         
         $field = mysqli_real_escape_string($connection, $field);
         
+        $glue = ($whereString ? ' AND ' : '');
+        
         if (is_array($value)) {
             foreach ($value as &$val) {
                 $val = mysqli_real_escape_string($connection, $val);
@@ -399,7 +401,7 @@ function _storage_db_build_where($connection, $where)
                 }
             }
             
-            $whereString .= '(' . $field . ' in (' . implode($value) . ')' . ')';
+            $whereString .= $glue . '(' . $field . ' in (' . implode($value) . ')' . ')';
         }
         else {
             $val = mysqli_real_escape_string($connection, $value);
@@ -408,7 +410,7 @@ function _storage_db_build_where($connection, $where)
                 $val = '"' . $val . '"';
             }
             
-            $whereString .= ($whereString ? ' AND ' : '') . '(' . $field . ' ' . $operation . ' ' . $val . ')';
+            $whereString .= $glue . '(' . $field . ' ' . $operation . ' ' . $val . ')';
         }
     }
     

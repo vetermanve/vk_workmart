@@ -14,7 +14,7 @@ function user_self_id () {
 }
 
 function user_self_balance() {
-    lets_use('billing_balance');
+    lets_use('billing_balance', 'billing_account');
     
     $userId = user_self_id();
     
@@ -24,5 +24,6 @@ function user_self_balance() {
         return 0;
     }
     
-    return billing_balance_get_money($userId);
+    $account = billing_account_get_user_main_account($userId);
+    return billing_balance_get_account_amount($account);
 }

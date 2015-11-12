@@ -3,3 +3,26 @@
 <div>
     <div>balance: <?=_v('balance', 0) ?></div>
 </div>
+
+<div>
+    <h1>Транзакции</h1>
+    
+    <div>
+        <div>
+            [Блокировка средств] [100] [в счет] [залога заказа] [Нужно посторить дом]<br>
+            [Возврат сресств] [из] [залога заказа] [Нужно посторить дом]<br>
+            [Уплата] [в счет] [процентов по сделке] [Нужно посторить дом]<br>
+            [Уплата] [в счет] [работ по ] [Нужно посторить дом]<br>
+            [Ввод средств] [из] [источника] [Благотворительный фонд]<br>
+        </div>
+        <? foreach (_v('transactions', []) as $transaction): ?>
+            <div>
+                <?=@$transaction['str_type'] ?>
+                <?=@$transaction['sum'] ?>
+                <?=@$transaction['prefix'] ?>
+                <?=@$transaction['target_action'] ?>
+                <?=@$transaction['target_owner'] ?>
+            </div>
+        <? endforeach; ?>
+    </div>
+</div>
