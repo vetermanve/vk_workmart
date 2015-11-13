@@ -71,8 +71,23 @@ function billing_transaction_update_status($transactionId, $status)
 function billing_transaction_get_accounts_transactions($accounts) { 
     lets_use('storage_db');
     
-    return storage_db_get_rows(BILLING_TRANSACTION_DB_TABLE, '*', [
-        [BILLING_TRANSACTION_FIELD_ACC_FROM, $accounts],
+    $income = storage_db_get_rows(BILLING_TRANSACTION_DB_TABLE, '*', [
         [BILLING_TRANSACTION_FIELD_ACC_TO, $accounts],
     ]);
+    $outcome = storage_db_get_rows(BILLING_TRANSACTION_DB_TABLE, '*', [
+        [BILLING_TRANSACTION_FIELD_ACC_TO, $accounts],
+    ]);
+    
+    $result = [];
+    foreach ($income as $transaction) {
+        $result[($transaction[BILLING_TRANSACTION_FIELD_STARTED] << 32) | $transaction[BILLING_TRANSACTION_FIELD_ID]] = $transaction;
+    }
+    
+    foreach ($outcome as $transaction) {
+        $result[($transaction[BILLING_TRANSACTION_FIELD_STARTED] << 32) | $transaction[BILLING_TRANSACTION_FIELD_ID]] = $transaction;
+    }
+    
+    krsort($result);
+    
+    return $result;
 }
