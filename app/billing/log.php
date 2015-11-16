@@ -21,8 +21,6 @@ function billing_log_get_user_transactions($userId) {
     $accData = billing_account_get_accounts($accIds);
     $ownersNames = billing_description_account_owner_names($accData);
     
-    core_dump($ownersNames);
-    
     foreach ($tr as &$transaction) {
         $transaction['str_type'] = isset($types[$transaction[BILLING_TRANSACTION_FIELD_TYPE]]) ? $types[$transaction[BILLING_TRANSACTION_FIELD_TYPE]] : $types[0];
         $transaction['target_action'] = $transaction[BILLING_TRANSACTION_FIELD_ACC_FROM] == $userId ? 'в счет' : 'из';

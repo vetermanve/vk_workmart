@@ -29,8 +29,6 @@ function web_controller_auth_auth () {
                 web_response_redirect('/');
                 return ;
             }
-            
-            core_dump('secret check fails ', $userId, $realSecret, $checkSecret);
         }
         
         web_router_render_page('auth', 'auth', [

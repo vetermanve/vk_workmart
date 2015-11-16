@@ -16,7 +16,6 @@ function billing_description_account_owner_names($accData) {
     lets_use('billing_account');
     
     $users = $sources = $result = [];
-    core_dump($accData);
     
     foreach ($accData as &$accInfo) {
         $id = $accInfo[BILLING_ACCOUNT_FIELD_ID];
