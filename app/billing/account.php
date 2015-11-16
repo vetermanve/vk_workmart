@@ -53,6 +53,18 @@ function billing_account_get_account($ownerId, $type, $autoCreate) {
     return $accountId;
 }
 
+function billing_account_get_accounts($accIds) {
+    lets_use('storage_db');
+    
+    return  storage_db_get_rows(
+        BILLING_ACCOUNT_DB_TABLE,
+        '*',
+        [
+            [BILLING_ACCOUNT_FIELD_ID, $accIds],
+        ]
+    );
+}
+
 function billing_account_get_user_main_account($userId) {
     return billing_account_get_account($userId, BILLING_ACCOUNT_TYPE_USER_MAIN, true);
 }

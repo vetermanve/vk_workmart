@@ -17,11 +17,12 @@
         </div>
         <? foreach (_v('transactions', []) as $transaction): ?>
             <div>
-                <?=@$transaction['str_type'] ?>
-                <?=@$transaction['sum'] ?>
-                <?=@$transaction['prefix'] ?>
-                <?=@$transaction['target_action'] ?>
-                <?=@$transaction['target_owner'] ?>
+                #<?=$transaction['id'] ?>
+                <?=$transaction['str_type'] ?>
+                <?=$transaction['amount'] ?>
+                <?=$transaction['target_action'] ?>
+                <?=$transaction['prefix'] ?>
+                "<?=$transaction['target_owner']; ?>"
             </div>
         <? endforeach; ?>
     </div>

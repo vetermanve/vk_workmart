@@ -26,6 +26,20 @@ function billing_balance_get_account_amount($accountId) {
     return $amount ? _billing_balance_unpack_money($amount) : 0;
 }
 
+function billing_balance_get_accounts($accIds) {
+    lets_use('storage_db');
+    
+    return storage_db_get_rows(
+        BILLING_BALANCE_DB_TABLE,
+        '*',
+        [
+            [BILLING_BALANCE_FIELD_ACCOUNT_ID, $accIds],
+        ],
+        [],
+        BILLING_BALANCE_FIELD_ACCOUNT_ID
+    );
+}
+
 function billing_balance_set_account_amount($accountId, $amount) {
     lets_use('storage_db');
     

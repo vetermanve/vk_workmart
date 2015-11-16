@@ -45,6 +45,8 @@ function _storage_db_get_connection($dbPart)
         return false;
     }
     
+    mysqli_set_charset($mysqli, "utf8");
+    
     $connections[$dbPart] = $mysqli;
     
     return $connections[$dbPart];
@@ -401,7 +403,7 @@ function _storage_db_build_where($connection, $where)
                 }
             }
             
-            $whereString .= $glue . '(' . $field . ' in (' . implode($value) . ')' . ')';
+            $whereString .= $glue . '(' . $field . ' in (' . implode(',', $value) . ')' . ')';
         }
         else {
             $val = mysqli_real_escape_string($connection, $value);

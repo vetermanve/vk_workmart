@@ -75,7 +75,7 @@ function billing_transaction_get_accounts_transactions($accounts) {
         [BILLING_TRANSACTION_FIELD_ACC_TO, $accounts],
     ]);
     $outcome = storage_db_get_rows(BILLING_TRANSACTION_DB_TABLE, '*', [
-        [BILLING_TRANSACTION_FIELD_ACC_TO, $accounts],
+        [BILLING_TRANSACTION_FIELD_ACC_FROM, $accounts],
     ]);
     
     $result = [];
