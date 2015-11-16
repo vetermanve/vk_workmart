@@ -41,7 +41,12 @@ function web_controller_auth_auth () {
     }
     
     web_router_render_page('auth', 'auth');
-    
+}
+
+function web_controller_auth_logout() {
+    lets_use('user_session');
+    user_session_write_session_cookie(null, null, -1);
+    web_response_redirect('/');
 }
 
 function web_controller_auth_register () {
