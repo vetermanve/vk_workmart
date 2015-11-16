@@ -10,8 +10,8 @@ const _AUTH_SALT_SECRET = 'AS@)Nsy8#,a!Rsdf^$';
 function web_controller_auth_auth () {
     $email = web_router_get_param('email');
     $pass = web_router_get_param('pass');
-
-    if ($email) {
+    
+    if (web_router_get_method() === 'POST') {
         lets_use('user_register');
         
         $userId = user_register_get_user_id_by_email($email);
@@ -48,6 +48,12 @@ function web_controller_auth_logout() {
 }
 
 function web_controller_auth_register () {
+    
+    if (web_router_get_method() !== 'POST') {
+        web_router_render_page('auth', 'register', []);
+        return ;
+    }
+    
     $email = web_router_get_param('email');
     
     if (!$email) {

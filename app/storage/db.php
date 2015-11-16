@@ -166,7 +166,7 @@ function storage_db_insert_row($table, $bind, $ignore = false)
     
     $lastInsertId = mysqli_insert_id($connection);
     
-    return $lastInsertId !== 0 ? $lastInsertId : $res->num_rows;
+    return $lastInsertId !== 0 ? $lastInsertId : $res;
 }
 
 function storage_db_set($table, $bind)

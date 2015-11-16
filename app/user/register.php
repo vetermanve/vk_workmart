@@ -14,7 +14,7 @@ function user_register_new_user($name, $email, $pass) {
     ]);
     
     if (!$userId) {
-        storage_db_transactions_rollback_all();
+        storage_db_transaction_rollback('users');
         core_error('cannot save user data to db table');
         return false;
     }
@@ -24,12 +24,12 @@ function user_register_new_user($name, $email, $pass) {
     $token = user_session_create_token($userId, $pass);
     
     if (!$token) {
-        storage_db_transactions_rollback_all();
+        storage_db_transaction_rollback('users');
         core_error('cannot save user token');
         return false;
     }
     
-    storage_db_transactions_commit_all();
+    storage_db_transaction_commit('users');
     
     return $userId;
 }

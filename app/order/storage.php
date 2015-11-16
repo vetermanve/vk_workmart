@@ -58,10 +58,21 @@ function order_storage_get_order($order) {
     return $order;
 }
 
-function order_storage_get_list() {
+function order_storage_get_list($status = ORDER_STORAGE_ORDER_STATUS_OK) {
     lets_use('storage_db');
     
-    return storage_db_get_rows('orders', '*', null, ['ORDER BY' => 'id DESC',]);
+    return storage_db_get_rows('orders', '*', [
+        ['status', $status]
+    ], ['ORDER BY' => 'id DESC',]);
+}
+
+function order_storage_get_by_user($userId, $status = ORDER_STORAGE_ORDER_STATUS_OK) {
+    lets_use('storage_db');
+    
+    return storage_db_get_rows('orders', '*', [
+        ['author_id', $userId],
+        ['status', $status]
+    ], ['ORDER BY' => 'id DESC',]);
 }
 
 function order_storage_get_author_list($userId) {

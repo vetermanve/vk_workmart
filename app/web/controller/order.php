@@ -211,9 +211,9 @@ function web_controller_order_list()
 
 function web_controller_order_mine()
 {
-    lets_use('storage_db', 'order_storage');
+    lets_use('storage_db', 'order_storage', 'user_self');
     
-    $posts = order_storage_get_list();
+    $posts = order_storage_get_by_user(user_self_id());
     
     $authors = [];
     
