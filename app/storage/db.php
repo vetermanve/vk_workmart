@@ -351,15 +351,20 @@ function _storage_db_build_where($connection, $where)
         
         $glue = ($whereString ? ' AND ' : '');
         
+        
         if (is_array($value)) {
-            foreach ($value as &$val) {
-                $val = mysqli_real_escape_string($connection, $val);
-                if (!is_numeric($val)) {
-                    $val = '"' . $val . '"';
+            if ($value) {
+                foreach ($value as &$val) {
+                    $val = mysqli_real_escape_string($connection, $val);
+                    if (!is_numeric($val)) {
+                        $val = '"' . $val . '"';
+                    }
                 }
+    
+                $whereString .= $glue . '(' . $field . ' in (' . implode(',', $value) . ')' . ')';    
+            } else {
+                $whereString .= '0';
             }
-            
-            $whereString .= $glue . '(' . $field . ' in (' . implode(',', $value) . ')' . ')';
         }
         else {
             $val = mysqli_real_escape_string($connection, $value);
