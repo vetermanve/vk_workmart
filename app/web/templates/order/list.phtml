@@ -1,5 +1,5 @@
 <div class="posts">
-    <h1 class="content-subhead">Последние заказы</h1>
+    <h1 class="content-subhead"><?=_v('post_title', 'Заказы') ?></h1>
     
     <? foreach (_v('posts',[]) as $post): ?>
     <section class="post">
@@ -8,6 +8,7 @@
             
             <p class="post-meta">
                 От: <a class="post-author" href="#"><?=_e($authors[$post['author_id']]['name']) ?></a> за <?=$post['cost'] ?> у.е.
+                <a class="post-category post-category-pure" href="/order/close?id=<?=$post['id'] ?>">Выполнить</a>
             </p>
         </header>
         
@@ -15,6 +16,7 @@
             <p>
                 <?=_e($post['description']) ?>
             </p>
+            
         </div>
     </section>
     <? endforeach; ?>

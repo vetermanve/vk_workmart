@@ -39,12 +39,12 @@ function order_storage_create_order($title, $desc, $author, $cost) {
 function order_storage_change_order_status($orderId, $status) {
     lets_use('storage_db');
     
-    $orderId = storage_db_set(ORDER_STORAGE_DB_TABLE, [
+    $result = storage_db_set(ORDER_STORAGE_DB_TABLE, [
         'id' => $orderId,
         'status' => $status,
     ]);
     
-    return $orderId;
+    return $result;
 }
 
 

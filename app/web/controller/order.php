@@ -168,6 +168,156 @@ function web_controller_order_create()
     web_router_render_page('order', 'create');
 }
 
+function web_controller_order_close()
+{
+    lets_use(
+        'web_router',
+        'order_storage',
+        'billing_balance',
+        'billing_account',
+        'billing_transaction',
+        'billing_locks',
+        'user_self'
+    );
+    
+    $userId = user_self_id();
+    
+    if (!$userId) {
+        web_router_redirect('/auth/auth');
+        return ;
+    }
+    
+    $orderId = web_router_get_param('id');
+    $order = order_storage_get_order($orderId);
+    
+    if (!$order) {
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg'   => 'Заказ не найден',
+        ]);
+        
+        return;
+    }
+    
+    if ($order['status'] != ORDER_STORAGE_ORDER_STATUS_OK) {
+        // cant lock transaction
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'Заказ уже выполнен',
+        ]);
+        
+        return ;
+    }
+    
+    $authorId = $order['author_id']; 
+    
+    $accountFrom = billing_account_get_user_locked_account($authorId);
+    $accountTo = billing_account_get_user_main_account($userId);
+    $cost = $order['cost'];
+    
+    $trId = billing_transaction_register($accountFrom, $accountTo, $cost);
+    if (!$trId) {
+        // cant register transaction
+        billing_transaction_fail($trId);
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'Ошибка сервера, повторите позже.',
+        ]);
+        return ;
+    }
+    
+    $lockRes = billing_locks_lock_transaction($trId, [$accountFrom, $accountTo]);
+    if (!$lockRes) {
+        // cant lock transaction
+        billing_transaction_fail($trId);
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'В данный момент операция невозможна, повторите позже',
+        ]);
+        return ;
+    }
+    
+    $movementPossible = billing_balance_check_sum_available($accountFrom, $cost);
+    if (!$movementPossible) {
+        // not enough money
+        billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'На исходящем счете недостаточно денег',
+        ]);
+        return ;
+    }
+    
+    $dbTransactionLock = billing_balance_storage_transaction_start();
+    if(!$dbTransactionLock) {
+        // cant begin db transaction
+        billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'Не удалось начать транзакцию',
+        ]);
+        return ;
+    }
+    
+    $moveRes = billing_balance_process_move($accountFrom, $accountTo, $cost, $trId);
+    if(!$moveRes) {
+        // cant move money
+        billing_balance_storage_transaction_rollback();
+        billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'Не удалось перевести деньги',
+        ]);
+        return ;
+    }
+    
+    $orderId = order_storage_change_order_status($orderId, ORDER_STORAGE_ORDER_STATUS_CLOSED);
+    
+    if (!$orderId) {
+        billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'Не удалось обновить статус заказа',
+        ]);
+        
+        return ;
+    }
+    
+    $transactionCommit = billing_balance_storage_transaction_commit();
+    if ($transactionCommit) {
+        // cant commit db transaction
+        billing_transaction_fail($trId);
+        billing_locks_unlock_transaction($trId);
+        
+        web_router_render_page('order', 'close', [
+            'result' => false,
+            'msg' => 'Не удалось завершить транзакцию',
+        ]);
+        return ;
+    }
+    
+    
+    billing_transaction_success($trId);
+    billing_locks_unlock_transaction($trId);
+    
+    web_router_render_page('order', 'close', [
+        'result' => false,
+        'msg' => 'Заказ "'.$order['title'].'" успешно закрыт. Деньги переведены вам на счет',
+    ]);
+}
+
+
 function web_controller_order_success()
 {
     lets_use('storage_db', 'order_storage');
