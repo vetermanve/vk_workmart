@@ -31,6 +31,8 @@ function billing_log_get_user_transactions($userId) {
         } else {
             $transaction['target_owner'] = $ownersNames[$transaction[BILLING_TRANSACTION_FIELD_ACC_FROM]];
         }
+        
+        $transaction['success'] = $transaction['status'] == BILLING_TRANSACTION_STATUS_SUCCESS;
     }
     
     return $tr;

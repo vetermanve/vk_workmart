@@ -62,7 +62,7 @@ function billing_transaction_update_status($transactionId, $status)
     
     $transactionId = storage_db_set(BILLING_TRANSACTION_DB_TABLE, [
         BILLING_TRANSACTION_FIELD_ID     => $transactionId,
-        BILLING_TRANSACTION_FIELD_STATUS => BILLING_TRANSACTION_STATUS_SUCCESS,
+        BILLING_TRANSACTION_FIELD_STATUS => $status,
     ]);
     
     return $transactionId;

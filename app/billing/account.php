@@ -56,6 +56,10 @@ function billing_account_get_account($ownerId, $type, $autoCreate) {
 function billing_account_get_accounts($accIds) {
     lets_use('storage_db');
     
+    if(!$accIds) {
+        return [];
+    }
+    
     return  storage_db_get_rows(
         BILLING_ACCOUNT_DB_TABLE,
         '*',

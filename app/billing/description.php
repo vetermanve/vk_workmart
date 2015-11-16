@@ -4,7 +4,7 @@ lets_sure_loaded('billing_description');
 
 function billing_description_transaction_types() {
     return [
-        0  => 'Что-то невероятное',
+        0  => 'Перевод',
         BILLING_TRANSACTION_TYPE_LOCK  => 'Блокировка средств',
         BILLING_TRANSACTION_TYPE_UNLOCK => 'Возврат сресств',
         BILLING_TRANSACTION_TYPE_PAY    => 'Уплата',
@@ -14,6 +14,10 @@ function billing_description_transaction_types() {
 
 function billing_description_account_owner_names($accData) {
     lets_use('billing_account');
+    
+    if(!$accData) {
+        return [];
+    }
     
     $users = $sources = $result = [];
     
