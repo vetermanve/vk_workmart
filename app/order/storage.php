@@ -47,6 +47,17 @@ function order_storage_change_order_status($orderId, $status) {
     return $orderId;
 }
 
+
+function order_storage_get_order($order) {
+    lets_use('storage_db');
+    
+    $order = storage_db_get_row(ORDER_STORAGE_DB_TABLE, '*', [
+        ['id' , $order],
+    ]);
+    
+    return $order;
+}
+
 function order_storage_get_list() {
     lets_use('storage_db');
     

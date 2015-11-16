@@ -73,7 +73,7 @@ function web_controller_order_create()
             // cant register transaction
             billing_transaction_fail($trId);
         
-            web_router_render_page('billing', 'refill', [
+            web_router_render_page('order', 'create', [
                 'result' => false,
                 'msg' => 'Ошибка сервера, повторите позже.',
             ]);
@@ -85,7 +85,7 @@ function web_controller_order_create()
             // cant lock transaction
             billing_transaction_fail($trId);
         
-            web_router_render_page('billing', 'refill', [
+            web_router_render_page('order', 'create', [
                 'result' => false,
                 'msg' => 'В данный момент операция невозможна, повторите позже',
             ]);
@@ -98,7 +98,7 @@ function web_controller_order_create()
             billing_transaction_fail($trId);
             billing_locks_unlock_transaction($trId);
         
-            web_router_render_page('billing', 'refill', [
+            web_router_render_page('order', 'create', [
                 'result' => false,
                 'msg' => 'На исходящем счете недостаточно денег',
             ]);
@@ -111,7 +111,7 @@ function web_controller_order_create()
             billing_transaction_fail($trId);
             billing_locks_unlock_transaction($trId);
         
-            web_router_render_page('billing', 'refill', [
+            web_router_render_page('order', 'create', [
                 'result' => false,
                 'msg' => 'Не удалось начать транзакцию',
             ]);
@@ -125,7 +125,7 @@ function web_controller_order_create()
             billing_transaction_fail($trId);
             billing_locks_unlock_transaction($trId);
         
-            web_router_render_page('billing', 'refill', [
+            web_router_render_page('order', 'create', [
                 'result' => false,
                 'msg' => 'Не удалось перевести деньги',
             ]);
@@ -138,7 +138,7 @@ function web_controller_order_create()
             billing_transaction_fail($trId);
             billing_locks_unlock_transaction($trId);
             
-            web_router_render_page('billing', 'refill', [
+            web_router_render_page('order', 'create', [
                 'result' => false,
                 'msg' => 'Не удалось сохранить заказ',
             ]);
@@ -151,7 +151,7 @@ function web_controller_order_create()
             billing_transaction_fail($trId);
             billing_locks_unlock_transaction($trId);
         
-            web_router_render_page('billing', 'refill', [
+            web_router_render_page('order', 'create', [
                 'result' => false,
                 'msg' => 'Не удалось завершить транзакцию',
             ]);
@@ -166,6 +166,27 @@ function web_controller_order_create()
     }
     
     web_router_render_page('order', 'create');
+}
+
+function web_controller_order_success()
+{
+    lets_use('storage_db', 'order_storage');
+    $orderId = web_router_get_param('id');
+    
+    $order = order_storage_get_order($orderId);
+    
+    if (!$order) {
+        web_router_render_page('order', 'success', [
+            'order' => [],
+            'msg' => 'Не удалось получить созданный заказ',
+        ]);
+        return;
+    }
+    
+    web_router_render_page('order', 'success', [
+        'order' => $order,
+        'msg' => 'Заказ успешно создан',
+    ]);
 }
 
 function web_controller_order_list()
