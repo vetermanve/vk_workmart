@@ -131,13 +131,3 @@ function web_controller_billing_refill() {
     ]);
 }
 
-function web_controller_billing_balance() {
-    lets_use('billing_balance');
-    
-    $fondMoney = billing_balance_get_money(1);
-    
-    web_router_render_page('billing', 'add', [
-        'fond_money' => number_format($fondMoney, 2, '.', ' '),
-    ]);
-}
-
