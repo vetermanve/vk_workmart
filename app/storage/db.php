@@ -294,50 +294,6 @@ function storage_db_transaction_rollback($tables)
     }
 }
 
-function storage_db_transactions_commit_all()
-{
-    global $_storage_db_started_transactions;
-    
-    if (!$_storage_db_started_transactions) {
-        core_log(__FUNCTION__ . ' called but no started transactions');
-        
-        return true;
-    }
-    
-    foreach ($_storage_db_started_transactions as $part => $connection) {
-        if (!mysqli_commit($connection)) {
-            core_error('fail commit transaction on part: ' . $part);
-            
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-function storage_db_transactions_rollback_all()
-{
-    global $_storage_db_started_transactions;
-    
-    if (!$_storage_db_started_transactions) {
-        core_log(__FUNCTION__ . ' called but no started transactions');
-        
-        return true;
-    }
-    
-    $allResult = true;
-    
-    foreach ($_storage_db_started_transactions as $part => $connection) {
-        $res = mysqli_rollback($connection);
-        if (!$res) {
-            core_error('fail rollback transaction on part: ' . $part);
-        }
-        $allResult = $allResult && $res;
-    }
-    
-    return $allResult;
-}
-
 function storage_db_transactions_end_check()
 {
     global $_storage_db_started_transactions;
